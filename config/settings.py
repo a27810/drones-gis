@@ -127,6 +127,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # añadida carpeta /static (junto a ma
 # Archivos subidos por el usuario (fotos, etc.)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

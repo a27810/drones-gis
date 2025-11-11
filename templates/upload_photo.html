@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Subir foto de dron</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 720px; margin: auto;}
+    form div {margin-bottom: 12px;}
+    label {display:block; font-weight:600; margin-bottom:4px;}
+    input, textarea, select {width:100%; padding:8px;}
+    .hint {font-size: .9em; color:#666;}
+    .actions {display:flex; gap:10px; align-items:center;}
+    a.btn {padding:8px 12px; border-radius:6px; text-decoration:none; border:1px solid #222; color:#222;}
+    button {padding:8px 12px; border-radius:6px; background:#111;color:#fff; border:0;}
+  </style>
+</head>
+<body>
+  <h1>Subir fotografía aérea</h1>
+  <p class="hint">Si la imagen tiene EXIF, se detectarán coordenadas automáticamente. Si no, indica lat/lon.</p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div><label>Vuelo (opcional)</label>{{ form.flight }}</div>
+    <div><label>Imagen</label>{{ form.image }}</div>
+    <div><label>Fecha/hora (opcional)</label>{{ form.taken_at }}</div>
+    <div><label>Notas (opcional)</label>{{ form.notes }}</div>
+    <div><label>Latitud (si no hay EXIF)</label>{{ form.lat }}</div>
+    <div><label>Longitud (si no hay EXIF)</label>{{ form.lon }}</div>
+    <div class="actions">
+      <button type="submit">Guardar</button>
+      <a class="btn" href="{% url 'home' %}">Volver al mapa</a>
+    </div>
+  </form>
+  <script src="https://unpkg.com/exifr/dist/full.umd.js"></script>
+<script>
+  const fileInput = document.getElementById('id_image');
+  const latInput  = document.getElementById('id_lat');
+  const lonInput  = document.getElementById('id_lon');
+
+  async function fillGpsFromExif(file) {
+    try {
+      const exif = await exifr.gps(file); // {latitude, longitude} o null
+      if (exif && typeof exif.latitude === 'number' && typeof exif.longitude === 'number') {
+        latInput.value = exif.latitude.toFixed(6);
+        lonInput.value = exif.longitude.toFixed(6);
+      }
+    } catch(e) {
+      console.debug('EXIF GPS no legible en cliente', e);
+    }
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (ev) => {
+      const file = ev.target.files?.[0];
+      if (file) fillGpsFromExif(file);
+    });
+  }
+</script>
+
+</body>
+</html>

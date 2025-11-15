@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from django.core.paginator import Paginator
 
 from rest_framework import viewsets
 
@@ -8,7 +9,9 @@ from .serializers import FlightSerializer, PhotoSerializer, ZoneSerializer
 from .forms import PhotoUploadForm
 
 
-# --- API DRF ---
+# -----------------------
+# API REST (DRF)
+# -----------------------
 
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.all().order_by('-date', 'id')
@@ -16,7 +19,7 @@ class FlightViewSet(viewsets.ModelViewSet):
 
 
 class PhotoViewSet(viewsets.ModelViewSet):
-    queryset = Photo.objects.all().order_by('-taken_at', 'id')
+    queryset = Photo.objects.all().order_by('-taken_at', '-id')
     serializer_class = PhotoSerializer
 
 
@@ -25,22 +28,68 @@ class ZoneViewSet(viewsets.ModelViewSet):
     serializer_class = ZoneSerializer
 
 
-# --- Vista HTML: subir foto (usa PhotoUploadForm) ---
+# -----------------------
+# Vistas HTML
+# -----------------------
+
+def home(request):
+    """Pantalla de bienvenida."""
+    return render(request, 'welcome.html')
+
+
+def map_view(request):
+    """Visor de mapa (Leaflet)."""
+    return render(request, 'map.html')
+
 
 @require_http_methods(["GET", "POST"])
 def upload_photo(request):
     """
     Formulario de subida de fotos.
-    - Si la imagen tiene EXIF GPS, el form intentará rellenar lat/lon en clean().
-    - Si no, el usuario debe indicar lat/lon manualmente.
+    Usa PhotoUploadForm, que ya se encarga de EXIF / validación.
     """
     if request.method == "POST":
         form = PhotoUploadForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
+            # después de subir, volvemos al inicio o al mapa
             return redirect('home')
-        # Si no es válido, re-renderizamos con errores
-        return render(request, 'upload_photo.html', {'form': form})
     else:
         form = PhotoUploadForm()
-        return render(request, 'upload_photo.html', {'form': form})
+
+    return render(request, 'upload_photo.html', {'form': form})
+
+
+def edit_photo(request, pk):
+    """
+    Editar una foto existente.
+    """
+    photo = get_object_or_404(Photo, pk=pk)
+
+    if request.method == "POST":
+        form = PhotoUploadForm(request.POST, request.FILES, instance=photo)
+        if form.is_valid():
+            form.save()
+            # después de editar, volvemos al listado
+            return redirect('photo_list')
+    else:
+        form = PhotoUploadForm(instance=photo)
+
+    return render(request, 'edit_photo.html', {
+        'form': form,
+        'photo': photo,
+    })
+
+
+def photo_list(request):
+    """
+    Listado/paginación de todas las fotos.
+    """
+    photos_qs = Photo.objects.all().order_by('-taken_at', '-id')
+    paginator = Paginator(photos_qs, 10)  # 10 por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'photos_list.html', {
+        'page_obj': page_obj,
+    })

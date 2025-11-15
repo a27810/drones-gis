@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Galería de fotografías de drones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 1100px; margin: auto; background:#f5f5f5;}
+    h1 {margin-bottom: 10px;}
+    .topbar {display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+    a.btn {padding:8px 12px; border-radius:6px; text-decoration:none; border:1px solid #222; color:#222; background:#fff;}
+    a.btn-primary {background:#111; color:#fff; border-color:#111;}
+    table {width:100%; border-collapse: collapse; background:#fff; border-radius:10px; overflow:hidden;}
+    th, td {padding:8px 10px; border-bottom:1px solid #ddd; font-size:0.95em;}
+    th {background:#eee; text-align:left;}
+    tr:hover {background:#f0f0f0;}
+    img.thumb {max-width:90px; max-height:60px; object-fit:cover; border-radius:6px;}
+    .coords {font-family:monospace; font-size:0.9em;}
+    .pagination {margin-top:15px; display:flex; gap:6px; justify-content:center;}
+    .pagination a, .pagination span {padding:4px 8px; border-radius:4px; border:1px solid #ccc; text-decoration:none; font-size:0.9em; color:#333; background:#fff;}
+    .pagination .current {background:#111; color:#fff; border-color:#111;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <h1>Galería de fotografías</h1>
+      <p style="margin:0; color:#555;">Listado de fotos geolocalizadas cargadas en el sistema.</p>
+    </div>
+    <div>
+      <a href="{% url 'home' %}" class="btn">Inicio</a>
+      <a href="{% url 'map' %}" class="btn">Ver mapa</a>
+      <a href="{% url 'upload_photo' %}" class="btn btn-primary">+ Subir nueva foto</a>
+    </div>
+  </div>
+
+  {% if page_obj.object_list %}
+    <table>
+      <thead>
+        <tr>
+          <th>Foto</th>
+          <th>ID</th>
+          <th>Fecha / hora</th>
+          <th>Coordenadas</th>
+          <th>Notas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for photo in page_obj.object_list %}
+        <tr>
+          <td>
+            {% if photo.image %}
+              <img src="{{ photo.image.url }}" alt="foto {{ photo.id }}" class="thumb">
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>#{{ photo.id }}</td>
+          <td>
+            {% if photo.taken_at %}
+              {{ photo.taken_at|date:"d/m/Y H:i" }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="coords">
+            {% if photo.lat and photo.lon %}
+              {{ photo.lat }} , {{ photo.lon }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>{{ photo.notes|default:"" }}</td>
+          <td>
+            <a href="{% url 'edit_photo' photo.id %}" class="btn">Editar</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
+      {% endif %}
+
+      <span class="current">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Siguiente &raquo;</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <p>No hay fotografías registradas todavía.</p>
+  {% endif %}
+</body>
+</html>

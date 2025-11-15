@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Vuelos de drones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 960px; margin: auto; background:#f5f5f5;}
+    h1 {margin-bottom: 8px;}
+    .topbar {display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; background:#fff;}
+    a.btn-primary {background:#111; color:#fff; border-color:#111;}
+    table {width:100%; border-collapse: collapse; background:#fff; border-radius:10px; overflow:hidden;}
+    th, td {padding:8px 10px; border-bottom:1px solid #ddd; font-size:0.95em;}
+    th {background:#eee; text-align:left;}
+    tr:hover {background:#f0f0f0;}
+    .notes {font-size:0.9em; color:#444;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <h1>Vuelos registrados</h1>
+      <p style="margin:0; color:#555;">Listado de vuelos realizados con drones.</p>
+    </div>
+    <div>
+      <a href="{% url 'home' %}" class="btn">Inicio</a>
+      <a href="{% url 'map' %}" class="btn">Mapa</a>
+      <a href="{% url 'photo_list' %}" class="btn">Fotos</a>
+      <a href="{% url 'flight_create' %}" class="btn btn-primary">+ Nuevo vuelo</a>
+    </div>
+  </div>
+
+  {% if flights %}
+    <table>
+        <thead>
+            <tr>
+            <th>Nombre</th>
+            <th>Fecha</th>
+            <th>Modelo de dron</th>
+            <th>Ruta</th>
+            <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flight in flights %}
+            <tr>
+            <td>{{ flight.name }}</td>
+            <td>
+                {% if flight.date %}
+                {{ flight.date|date:"d/m/Y" }}
+                {% else %}
+                —
+                {% endif %}
+            </td>
+            <td>{{ flight.drone_model|default:"—" }}</td>
+            <td>
+                {% if flight.path_geojson %}
+                <span style="font-size:0.9em; color:#065f46;">Definida</span>
+                {% else %}
+                <span style="font-size:0.9em; color:#6b7280;">Sin ruta</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn">Ver vuelo en mapa</a>
+            </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+  {% else %}
+    <p>No hay vuelos registrados todavía.</p>
+  {% endif %}
+</body>
+</html>

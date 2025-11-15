@@ -67,14 +67,18 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin="">
   </script>
+  
   <script>
-    // --- Leer parámetro ?photo=ID ---
+    // --- Leer parámetros de la URL ---
     const params = new URLSearchParams(window.location.search);
     const photoIdParam = parseInt(params.get('photo'), 10);
+    const flightIdParam = parseInt(params.get('flight'), 10);
+
     const focusPhotoId = Number.isInteger(photoIdParam) ? photoIdParam : null;
+    const focusFlightId = Number.isInteger(flightIdParam) ? flightIdParam : null;
 
     // --- Crear mapa ---
-    const map = L.map('map').setView([40.4167, -3.7033], 6); // Centro por defecto
+    const map = L.map('map').setView([40.4167, -3.7033], 6); // Madrid por defecto
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -83,8 +87,9 @@
 
     const bounds = L.latLngBounds([]);
     let focusMarker = null;
+    let flightLineLayer = null;
 
-    function extendBounds(lat, lon) {
+    function extendBoundsLatLon(lat, lon) {
       try { bounds.extend([lat, lon]); } catch (e) {}
     }
 
@@ -95,8 +100,14 @@
       fetch('/api/zones/').then(r => r.json()),
     ]).then(([photos, flights, zones]) => {
 
-      // FOTOS
-      photos.forEach(p => {
+      // 1) Si hay vuelo en la URL, filtramos las fotos a solo ese vuelo
+      let photosToShow = photos;
+      if (focusFlightId !== null) {
+        photosToShow = photos.filter(p => p.flight === focusFlightId);
+      }
+
+      // 2) Pintar fotos
+      photosToShow.forEach(p => {
         const lat = parseFloat(p.lat);
         const lon = parseFloat(p.lon);
         if (!isNaN(lat) && !isNaN(lon)) {
@@ -105,30 +116,53 @@
           const notes = p.notes || '';
           marker.bindPopup(`<b>Foto #${p.id}</b><br>${img}<small>${notes}</small>`);
 
-          extendBounds(lat, lon);
+          extendBoundsLatLon(lat, lon);
 
-          // Si hay un focusPhotoId y coincide, guardamos este marker
           if (focusPhotoId !== null && p.id === focusPhotoId) {
             focusMarker = marker;
           }
         }
       });
 
-      // (Aquí podrías dibujar vuelos y zonas más adelante...)
+      // 3) Si hay vuelo en la URL, intentar dibujar su path_geojson
+      if (focusFlightId !== null) {
+        const flight = flights.find(f => f.id === focusFlightId);
+        if (flight && flight.path_geojson) {
+          try {
+            // path_geojson ya debería venir como objeto JSON
+            flightLineLayer = L.geoJSON(flight.path_geojson, {
+              style: {
+                color: '#2563eb',
+                weight: 4,
+                opacity: 0.8
+              }
+            }).addTo(map);
 
-      // --- Ajustar la vista ---
+            const lineBounds = flightLineLayer.getBounds();
+            if (lineBounds.isValid()) {
+              bounds.extend(lineBounds);
+            }
+          } catch (e) {
+            console.error('Error interpretando path_geojson', e);
+          }
+        }
+      }
+
+      // 4) Ajustar la vista
       if (focusMarker) {
-        // Si venimos desde "Ver en mapa"
+        // Prioridad: si venimos de "Ver foto en mapa"
         const ll = focusMarker.getLatLng();
         map.setView(ll, 15);
         focusMarker.openPopup();
       } else if (bounds.isValid()) {
-        // Vista general
+        // Ajustar al contenido (fotos + ruta si hay)
         map.fitBounds(bounds.pad(0.1));
       }
+
     }).catch(err => {
       console.error('Error cargando datos GIS', err);
     });
   </script>
+
 </body>
 </html>

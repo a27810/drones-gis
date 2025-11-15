@@ -1,17 +1,21 @@
 from rest_framework import serializers
 from .models import Flight, Photo, Zone
 
+
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
-        fields = '__all__'
+        fields = ['id', 'name', 'drone_model', 'date', 'path_geojson']
+
 
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = '__all__'
+        # flight será el ID del vuelo (o null)
+        fields = ['id', 'flight', 'image', 'lat', 'lon', 'taken_at', 'notes']
+
 
 class ZoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Zone
-        fields = '__all__'
+        fields = ['id', 'name', 'zone_type', 'geometry']

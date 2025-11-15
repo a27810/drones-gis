@@ -6,7 +6,7 @@ from rest_framework import viewsets
 
 from .models import Flight, Photo, Zone
 from .serializers import FlightSerializer, PhotoSerializer, ZoneSerializer
-from .forms import PhotoUploadForm
+from .forms import PhotoUploadForm, FlightForm
 
 
 # -----------------------
@@ -92,4 +92,30 @@ def photo_list(request):
 
     return render(request, 'photos_list.html', {
         'page_obj': page_obj,
+    })
+
+def flight_list(request):
+    """
+    Listado simple de vuelos.
+    """
+    flights = Flight.objects.all().order_by('-date', 'id')
+    return render(request, 'flights_list.html', {
+        'flights': flights,
+    })
+
+
+def flight_create(request):
+    """
+    Crear un nuevo vuelo.
+    """
+    if request.method == 'POST':
+        form = FlightForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('flight_list')
+    else:
+        form = FlightForm()
+
+    return render(request, 'flight_form.html', {
+        'form': form,
     })

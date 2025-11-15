@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Nuevo vuelo de dron</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 640px; margin: auto; background:#f5f5f5;}
+    h1 {margin-bottom: 10px;}
+    form p {margin-bottom: 10px;}
+    label {font-weight:600;}
+    input, textarea {width:100%; padding:6px;}
+    button {padding:8px 14px; border-radius:6px; border:0; background:#111; color:#fff; cursor:pointer;}
+    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; margin-left:10px; background:#fff;}
+  </style>
+</head>
+<body>
+  <h1>Registrar nuevo vuelo</h1>
+  <p>Introduce los datos básicos del vuelo. Luego podrás asociar fotos a este vuelo desde el formulario de subida.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">Guardar vuelo</button>
+    <a href="{% url 'flight_list' %}" class="btn">Volver al listado</a>
+  </form>
+</body>
+</html>

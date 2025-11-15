@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Photo
+from .models import Photo, Flight
 from .utils_exif import extract_gps_from_image
 
 class PhotoUploadForm(forms.ModelForm):
@@ -31,3 +31,21 @@ class PhotoUploadForm(forms.ModelForm):
         if cleaned.get('lat') is None or cleaned.get('lon') is None:
             raise ValidationError("No se han obtenido coordenadas GPS. Indica lat/lon manualmente.")
         return cleaned
+
+class FlightForm(forms.ModelForm):
+    class Meta:
+        model = Flight
+        fields = ['name', 'drone_model', 'date', 'path_geojson']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'path_geojson': forms.Textarea(attrs={'rows': 3}),
+        }
+        labels = {
+            'name': 'Nombre del vuelo',
+            'drone_model': 'Modelo de dron',
+            'date': 'Fecha',
+            'path_geojson': 'Ruta (GeoJSON opcional)',
+        }
+        help_texts = {
+            'path_geojson': 'Opcional: LineString o Feature en formato GeoJSON para representar la ruta.',
+        }

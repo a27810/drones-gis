@@ -20,28 +20,53 @@
     header {
       background: #111827;
       color: #e5e7eb;
-      padding: 12px 20px;
+      padding: 10px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
+    }
+    header .left {
+      display: flex;
+      flex-direction: column;
     }
     header .title {
       font-size: 1rem;
       font-weight: 600;
     }
-    header .actions a {
+    header .subtitle {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+    header .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    a.btn-link {
       text-decoration: none;
-      padding: 6px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
       border: 1px solid #e5e7eb;
       color: #e5e7eb;
-      margin-left: 6px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      background: transparent;
     }
-    header .actions a.primary {
+    a.btn-primary {
       background: #10b981;
       border-color: #10b981;
       color: #111827;
+    }
+    select#flight-select {
+      font-size: 0.8rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #4b5563;
+      background: #111827;
+      color: #e5e7eb;
+      max-width: 220px;
     }
     #map {
       height: calc(100vh - 52px); /* toda la pantalla menos el header */
@@ -51,11 +76,18 @@
 </head>
 <body>
   <header>
-    <div class="title">Visor GIS de vuelos y fotografías de drones</div>
-    <div class="actions">
-      <a href="{% url 'home' %}">Inicio</a>
-      <a href="{% url 'photo_list' %}">Galería</a>
-      <a href="{% url 'upload_photo' %}" class="primary">+ Subir foto</a>
+    <div class="left">
+      <div class="title">Visor GIS de vuelos y fotografías de drones</div>
+      <div class="subtitle">Filtra por vuelo y visualiza ruta y fotos asociadas</div>
+    </div>
+    <div class="right">
+      <label for="flight-select" style="font-size:0.8rem;">Vuelo:</label>
+      <select id="flight-select">
+        <option value="">Todos los vuelos</option>
+      </select>
+      <a href="{% url 'home' %}" class="btn-link">Inicio</a>
+      <a href="{% url 'photo_list' %}" class="btn-link">Galería</a>
+      <a href="{% url 'upload_photo' %}" class="btn-link btn-primary">+ Subir foto</a>
     </div>
   </header>
 
@@ -67,7 +99,6 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin="">
   </script>
-  
   <script>
     // --- Leer parámetros de la URL ---
     const params = new URLSearchParams(window.location.search);
@@ -93,6 +124,8 @@
       try { bounds.extend([lat, lon]); } catch (e) {}
     }
 
+    const flightSelect = document.getElementById('flight-select');
+
     // --- Cargar datos desde la API ---
     Promise.all([
       fetch('/api/photos/').then(r => r.json()),
@@ -100,13 +133,45 @@
       fetch('/api/zones/').then(r => r.json()),
     ]).then(([photos, flights, zones]) => {
 
-      // 1) Si hay vuelo en la URL, filtramos las fotos a solo ese vuelo
+      // 1) Poblar el selector de vuelos
+      if (flightSelect) {
+        // Ordenar vuelos por fecha descendente (si existe), luego por id
+        flights.sort((a, b) => {
+          if (a.date && b.date && a.date !== b.date) {
+            return a.date < b.date ? 1 : -1;
+          }
+          return a.id - b.id;
+        });
+
+        flights.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          const dateText = f.date ? ` (${f.date})` : '';
+          opt.textContent = `${f.name}${dateText}`;
+          if (focusFlightId !== null && f.id === focusFlightId) {
+            opt.selected = true;
+          }
+          flightSelect.appendChild(opt);
+        });
+
+        flightSelect.addEventListener('change', () => {
+          const value = flightSelect.value;
+          if (value === '') {
+            // Todos los vuelos
+            window.location.href = '/map/';
+          } else {
+            window.location.href = '/map/?flight=' + encodeURIComponent(value);
+          }
+        });
+      }
+
+      // 2) Si hay vuelo en la URL, filtramos las fotos a solo ese vuelo
       let photosToShow = photos;
       if (focusFlightId !== null) {
         photosToShow = photos.filter(p => p.flight === focusFlightId);
       }
 
-      // 2) Pintar fotos
+      // 3) Pintar fotos
       photosToShow.forEach(p => {
         const lat = parseFloat(p.lat);
         const lon = parseFloat(p.lon);
@@ -124,12 +189,12 @@
         }
       });
 
-      // 3) Si hay vuelo en la URL, intentar dibujar su path_geojson
+      // 4) Si hay vuelo en la URL, intentar dibujar su path_geojson
       if (focusFlightId !== null) {
         const flight = flights.find(f => f.id === focusFlightId);
         if (flight && flight.path_geojson) {
           try {
-            // path_geojson ya debería venir como objeto JSON
+            // En Django/DRF, path_geojson debería venir ya como objeto JSON
             flightLineLayer = L.geoJSON(flight.path_geojson, {
               style: {
                 color: '#2563eb',
@@ -148,14 +213,12 @@
         }
       }
 
-      // 4) Ajustar la vista
+      // 5) Ajustar la vista
       if (focusMarker) {
-        // Prioridad: si venimos de "Ver foto en mapa"
         const ll = focusMarker.getLatLng();
         map.setView(ll, 15);
         focusMarker.openPopup();
       } else if (bounds.isValid()) {
-        // Ajustar al contenido (fotos + ruta si hay)
         map.fitBounds(bounds.pad(0.1));
       }
 
@@ -163,6 +226,5 @@
       console.error('Error cargando datos GIS', err);
     });
   </script>
-
 </body>
 </html>

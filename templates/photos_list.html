@@ -74,7 +74,12 @@
           <td>{{ photo.notes|default:"" }}</td>
           <td>
             <a href="{% url 'edit_photo' photo.id %}" class="btn">Editar</a>
+            <a href="{% url 'map' %}?photo={{ photo.id }}" class="btn">
+                Ver en mapa
+            </a>
           </td>
+
+
         </tr>
         {% endfor %}
       </tbody>

@@ -1,76 +1,133 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <title>Drone Map MVP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="stylesheet"
+  <meta charset="utf-8">
+  <title>Visor de mapa – Drones GIS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Leaflet CSS desde CDN -->
+  <link
+    rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <style>#map{height:100vh;margin:0;}</style>
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, Arial, sans-serif;
+      background: #f5f5f5;
+    }
+    header {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header .title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    header .actions a {
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      color: #e5e7eb;
+      margin-left: 6px;
+      font-size: 0.85rem;
+    }
+    header .actions a.primary {
+      background: #10b981;
+      border-color: #10b981;
+      color: #111827;
+    }
+    #map {
+      height: calc(100vh - 52px); /* toda la pantalla menos el header */
+      width: 100%;
+    }
+  </style>
 </head>
-
-<style>
-  .fab { position: fixed; right: 16px; bottom: 16px; padding: 12px 16px;
-         border-radius: 999px; background: #111; color: #fff; text-decoration: none;
-         font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
-</style>
-<a class="fab" href="/upload/photo/">+ Subir foto</a>
-
 <body>
-  <div id="map"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script>
-    const map = L.map('map').setView([40.4167, -3.7033], 6);
+  <header>
+    <div class="title">Visor GIS de vuelos y fotografías de drones</div>
+    <div class="actions">
+      <a href="{% url 'home' %}">Inicio</a>
+      <a href="{% url 'photo_list' %}">Galería</a>
+      <a href="{% url 'upload_photo' %}" class="primary">+ Subir foto</a>
+    </div>
+  </header>
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      maxZoom:19, attribution:'&copy; OpenStreetMap'
+  <div id="map"></div>
+
+  <!-- Leaflet JS desde CDN -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+  </script>
+  <script>
+    // --- Leer parámetro ?photo=ID ---
+    const params = new URLSearchParams(window.location.search);
+    const photoIdParam = parseInt(params.get('photo'), 10);
+    const focusPhotoId = Number.isInteger(photoIdParam) ? photoIdParam : null;
+
+    // --- Crear mapa ---
+    const map = L.map('map').setView([40.4167, -3.7033], 6); // Centro por defecto
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
+    const bounds = L.latLngBounds([]);
+    let focusMarker = null;
+
+    function extendBounds(lat, lon) {
+      try { bounds.extend([lat, lon]); } catch (e) {}
+    }
+
+    // --- Cargar datos desde la API ---
     Promise.all([
-      fetch('/api/photos/').then(r=>r.json()),
-      fetch('/api/flights/').then(r=>r.json()),
-      fetch('/api/zones/').then(r=>r.json()),
-    ]).then(([photos, flights, zones])=>{
-      // Fotos -> marcadores
-      photos.forEach(p=>{
-        const m=L.marker([p.lat,p.lon]).addTo(map);
-        const img=p.image?`<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">`:'';
-        m.bindPopup(`<b>Foto #${p.id}</b><br>${img}<small>${p.notes||''}</small>`);
-      });
+      fetch('/api/photos/').then(r => r.json()),
+      fetch('/api/flights/').then(r => r.json()),
+      fetch('/api/zones/').then(r => r.json()),
+    ]).then(([photos, flights, zones]) => {
 
-      // Vuelos -> polilíneas (LineString GeoJSON lon,lat -> Leaflet lat,lon)
-      flights.forEach(f=>{
-        const g=f.path_geojson;
-        if(g && g.type==='LineString'){
-          const coords=g.coordinates.map(([lon,lat])=>[lat,lon]);
-          L.polyline(coords).addTo(map).bindPopup(`<b>${f.name}</b><br>${f.drone_model||''}`);
+      // FOTOS
+      photos.forEach(p => {
+        const lat = parseFloat(p.lat);
+        const lon = parseFloat(p.lon);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          const marker = L.marker([lat, lon]).addTo(map);
+          const img = p.image ? `<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">` : '';
+          const notes = p.notes || '';
+          marker.bindPopup(`<b>Foto #${p.id}</b><br>${img}<small>${notes}</small>`);
+
+          extendBounds(lat, lon);
+
+          // Si hay un focusPhotoId y coincide, guardamos este marker
+          if (focusPhotoId !== null && p.id === focusPhotoId) {
+            focusMarker = marker;
+          }
         }
       });
 
-      // Zonas -> Polygon/MultiPolygon
-      const drawGeom=(z,geom)=>{
-        if(geom.type==='Polygon'){
-          const ring=geom.coordinates[0].map(([lon,lat])=>[lat,lon]);
-          L.polygon(ring).addTo(map).bindPopup(`<b>${z.name}</b> (${z.zone_type})`);
-        }else if(geom.type==='MultiPolygon'){
-          geom.coordinates.forEach(poly=>{
-            const ring=poly[0].map(([lon,lat])=>[lat,lon]);
-            L.polygon(ring).addTo(map).bindPopup(`<b>${z.name}</b> (${z.zone_type})`);
-          });
-        }else if(geom.type==='LineString'){
-          const coords=geom.coordinates.map(([lon,lat])=>[lat,lon]);
-          L.polyline(coords).addTo(map).bindPopup(`<b>${z.name}</b> (${z.zone_type})`);
-        }
-      };
-      zones.forEach(z=>{
-        const g=z.geometry;
-        if(!g) return;
-        if(g.type==='Feature') drawGeom(z,g.geometry);
-        else if(g.type==='FeatureCollection') g.features.forEach(ft=>drawGeom(z,ft.geometry));
-        else drawGeom(z,g);
-      });
+      // (Aquí podrías dibujar vuelos y zonas más adelante...)
+
+      // --- Ajustar la vista ---
+      if (focusMarker) {
+        // Si venimos desde "Ver en mapa"
+        const ll = focusMarker.getLatLng();
+        map.setView(ll, 15);
+        focusMarker.openPopup();
+      } else if (bounds.isValid()) {
+        // Vista general
+        map.fitBounds(bounds.pad(0.1));
+      }
+    }).catch(err => {
+      console.error('Error cargando datos GIS', err);
     });
   </script>
 </body>

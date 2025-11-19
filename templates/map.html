@@ -72,13 +72,41 @@
       height: calc(100vh - 52px); /* toda la pantalla menos el header */
       width: 100%;
     }
+
+    /* Estilos para controles personalizados (regla de distancia) */
+    .leaflet-control.custom-control {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .leaflet-control.custom-control button {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin-right: 4px;
+      font-size: 0.75rem;
+      background: #10b981;
+      color: #111827;
+    }
+    .leaflet-control.custom-control button.secondary {
+      background: #374151;
+      color: #e5e7eb;
+    }
+    .leaflet-control.custom-control span {
+      display: inline-block;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="left">
       <div class="title">Visor GIS de vuelos y fotografías de drones</div>
-      <div class="subtitle">Filtra por vuelo y visualiza ruta y fotos asociadas</div>
+      <div class="subtitle">Capas, rutas, fotos geolocalizadas y medición de distancias</div>
     </div>
     <div class="right">
       <label for="flight-select" style="font-size:0.8rem;">Vuelo:</label>
@@ -87,7 +115,9 @@
       </select>
       <a href="{% url 'home' %}" class="btn-link">Inicio</a>
       <a href="{% url 'photo_list' %}" class="btn-link">Galería</a>
+            <a href="{% url 'map3d_view' %}" class="btn-link">Mapa 3D</a>
       <a href="{% url 'upload_photo' %}" class="btn-link btn-primary">+ Subir foto</a>
+
     </div>
   </header>
 
@@ -109,22 +139,179 @@
     const focusFlightId = Number.isInteger(flightIdParam) ? flightIdParam : null;
 
     // --- Crear mapa ---
-    const map = L.map('map').setView([40.4167, -3.7033], 6); // Madrid por defecto
+    const map = L.map('map').setView([40.4167, -3.7033], 6); // Centro en Madrid por defecto
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
+    // --- Grupos de capas ---
+    const photoLayer   = L.layerGroup().addTo(map);
+    const flightsLayer = L.layerGroup().addTo(map);
+    const zonesLayer   = L.layerGroup().addTo(map);
+    const measureLayer = L.layerGroup().addTo(map); // para la regla de distancia
+
     const bounds = L.latLngBounds([]);
     let focusMarker = null;
-    let flightLineLayer = null;
+    let animatedMarker = null;
+    let animationIntervalId = null;
 
     function extendBoundsLatLon(lat, lon) {
       try { bounds.extend([lat, lon]); } catch (e) {}
     }
 
+    // --- Icono personalizado para fotos ---
+    // Crea por ejemplo un archivo static/img/camera-marker.png y apunta aquí.
+    const photoIcon = L.icon({
+      iconUrl: '/static/img/camera-marker.png',
+      iconSize:     [28, 28],
+      iconAnchor:   [14, 28],
+      popupAnchor:  [0, -24]
+    });
+
+    // --- Icono para el dron animado sobre la ruta ---
+    const droneIcon = L.icon({
+      iconUrl: '/static/img/camera-marker.png',
+      iconSize:     [32, 32],
+      iconAnchor:   [16, 16],
+      popupAnchor:  [0, -16]
+    });
+
+    // --- Selector de vuelos en el header ---
     const flightSelect = document.getElementById('flight-select');
+
+    // --- Función para convertir GeoJSON LineString a array de LatLng ---
+    function lineStringToLatLngs(path_geojson) {
+      let line = null;
+      if (!path_geojson) return [];
+
+      // Permitimos directamente LineString o Feature con LineString
+      if (path_geojson.type === 'LineString') {
+        line = path_geojson;
+      } else if (path_geojson.type === 'Feature' && path_geojson.geometry && path_geojson.geometry.type === 'LineString') {
+        line = path_geojson.geometry;
+      }
+
+      if (!line || !Array.isArray(line.coordinates)) return [];
+
+      return line.coordinates.map(function(coord) {
+        // GeoJSON: [lon, lat]
+        return [coord[1], coord[0]];
+      });
+    }
+
+    // --- Animación de dron sobre una ruta ---
+    function stopAnimation() {
+      if (animationIntervalId !== null) {
+        clearInterval(animationIntervalId);
+        animationIntervalId = null;
+      }
+      if (animatedMarker) {
+        map.removeLayer(animatedMarker);
+        animatedMarker = null;
+      }
+    }
+
+        function startFlightAnimation(latlngs) {
+      stopAnimation();
+      if (!latlngs || latlngs.length < 2) return;
+
+      // Creamos un marcador normal con icono de dron en el primer punto de la ruta
+      animatedMarker = L.marker(latlngs[0], {
+        icon: droneIcon
+      }).addTo(map);
+
+      let idx = 0;
+      animationIntervalId = setInterval(function() {
+        idx = (idx + 1) % latlngs.length;
+        animatedMarker.setLatLng(latlngs[idx]);
+      }, 700); // se mueve cada 0.7 segundos
+    }
+
+
+    // --- Control de capas (Fotos / Vuelos / Zonas) ---
+    const overlays = {
+      'Fotos': photoLayer,
+      'Vuelos': flightsLayer,
+      'Zonas': zonesLayer
+    };
+    L.control.layers(null, overlays, { collapsed: true }).addTo(map);
+
+    // --- Control de medición de distancia ---
+    let measureMode = false;
+    let measurePoints = [];
+    let measurePolyline = null;
+
+    function formatDistance(meters) {
+      if (meters < 1000) {
+        return meters.toFixed(1) + ' m';
+      }
+      return (meters / 1000).toFixed(2) + ' km';
+    }
+
+    function computeTotalDistance(points) {
+      if (points.length < 2) return 0;
+      let total = 0;
+      for (let i = 1; i < points.length; i++) {
+        total += map.distance(points[i - 1], points[i]);
+      }
+      return total;
+    }
+
+    const measureControl = L.control({ position: 'topleft' });
+    measureControl.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'leaflet-control custom-control');
+      div.innerHTML = `
+        <div>
+          <button id="btn-measure">Regla</button>
+          <button id="btn-measure-clear" class="secondary">Limpiar</button>
+        </div>
+        <span id="measure-info">Distancia: 0 m</span>
+      `;
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    };
+    measureControl.addTo(map);
+
+    const btnMeasure = document.getElementById('btn-measure');
+    const btnMeasureClear = document.getElementById('btn-measure-clear');
+    const measureInfo = document.getElementById('measure-info');
+
+    btnMeasure.addEventListener('click', function() {
+      measureMode = !measureMode;
+      btnMeasure.textContent = measureMode ? 'Midiendo…' : 'Regla';
+      btnMeasure.style.backgroundColor = measureMode ? '#fbbf24' : '#10b981';
+    });
+
+    btnMeasureClear.addEventListener('click', function() {
+      measureMode = false;
+      btnMeasure.textContent = 'Regla';
+      btnMeasure.style.backgroundColor = '#10b981';
+      measurePoints = [];
+      if (measurePolyline) {
+        measureLayer.removeLayer(measurePolyline);
+        measurePolyline = null;
+      }
+      measureInfo.textContent = 'Distancia: 0 m';
+    });
+
+    map.on('click', function(e) {
+      if (!measureMode) return;
+      measurePoints.push(e.latlng);
+
+      if (measurePolyline) {
+        measureLayer.removeLayer(measurePolyline);
+      }
+      measurePolyline = L.polyline(measurePoints, {
+        color: '#f97316',
+        weight: 3,
+        dashArray: '4,4'
+      }).addTo(measureLayer);
+
+      const d = computeTotalDistance(measurePoints);
+      measureInfo.textContent = 'Distancia: ' + formatDistance(d);
+    });
 
     // --- Cargar datos desde la API ---
     Promise.all([
@@ -135,7 +322,6 @@
 
       // 1) Poblar el selector de vuelos
       if (flightSelect) {
-        // Ordenar vuelos por fecha descendente (si existe), luego por id
         flights.sort((a, b) => {
           if (a.date && b.date && a.date !== b.date) {
             return a.date < b.date ? 1 : -1;
@@ -157,7 +343,6 @@
         flightSelect.addEventListener('change', () => {
           const value = flightSelect.value;
           if (value === '') {
-            // Todos los vuelos
             window.location.href = '/map/';
           } else {
             window.location.href = '/map/?flight=' + encodeURIComponent(value);
@@ -171,12 +356,12 @@
         photosToShow = photos.filter(p => p.flight === focusFlightId);
       }
 
-      // 3) Pintar fotos
+      // 3) Pintar fotos con icono personalizado
       photosToShow.forEach(p => {
         const lat = parseFloat(p.lat);
         const lon = parseFloat(p.lon);
         if (!isNaN(lat) && !isNaN(lon)) {
-          const marker = L.marker([lat, lon]).addTo(map);
+          const marker = L.marker([lat, lon], { icon: photoIcon }).addTo(photoLayer);
           const img = p.image ? `<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">` : '';
           const notes = p.notes || '';
           marker.bindPopup(`<b>Foto #${p.id}</b><br>${img}<small>${notes}</small>`);
@@ -189,37 +374,108 @@
         }
       });
 
-      // 4) Si hay vuelo en la URL, intentar dibujar su path_geojson
-      if (focusFlightId !== null) {
-        const flight = flights.find(f => f.id === focusFlightId);
-        if (flight && flight.path_geojson) {
-          try {
-            // En Django/DRF, path_geojson debería venir ya como objeto JSON
-            flightLineLayer = L.geoJSON(flight.path_geojson, {
-              style: {
-                color: '#2563eb',
-                weight: 4,
-                opacity: 0.8
-              }
-            }).addTo(map);
+      // 4) Pintar zonas (GeoJSON) con estilos según zone_type
+      zones.forEach(z => {
+        if (!z.geometry) return;
 
-            const lineBounds = flightLineLayer.getBounds();
-            if (lineBounds.isValid()) {
-              bounds.extend(lineBounds);
-            }
-          } catch (e) {
-            console.error('Error interpretando path_geojson', e);
+        const zoneType = (z.zone_type || '').toLowerCase();
+
+        const styleFn = function(feature) {
+          let color = '#10b981'; // verde por defecto (Permitida / Recomendada)
+          if (zoneType.includes('prohib')) {
+            color = '#ef4444'; // roja
+          } else if (zoneType.includes('restr')) {
+            color = '#f97316'; // naranja
           }
-        }
-      }
+          return {
+            color: color,
+            weight: 2,
+            fillColor: color,
+            fillOpacity: 0.15
+          };
+        };
 
-      // 5) Ajustar la vista
+        const layer = L.geoJSON(z.geometry, {
+          style: styleFn
+        }).addTo(zonesLayer);
+
+        layer.bindPopup(`<b>${z.name}</b><br><small>${z.zone_type}</small>`);
+
+        try {
+          const zb = layer.getBounds();
+          if (zb.isValid()) {
+            bounds.extend(zb);
+          }
+
+          // 🔴 Si es zona prohibida, creamos un "círculo de seguridad"
+          if (zoneType.includes('prohib')) {
+            const center = zb.getCenter();
+            // Radio de seguridad: 500 m (puedes subir a 1000 si quieres)
+            const safetyCircle = L.circle(center, {
+              radius: 500,
+              color: '#ef4444',
+              weight: 1,
+              fillColor: '#ef4444',
+              fillOpacity: 0.05
+            }).addTo(zonesLayer);
+
+            safetyCircle.bindPopup(
+              `<b>Zona de seguridad</b><br><small>Radio 500 m alrededor de "${z.name}"</small>`
+            );
+          }
+        } catch (e) {}
+      });
+
+
+      // 5) Pintar vuelos (rutas) con colores distintos
+      const palette = [
+        '#2563eb', '#16a34a', '#db2777',
+        '#f97316', '#7c3aed', '#059669'
+      ];
+
+      let focusedFlightLatLngs = null;
+
+      flights.forEach((f, idx) => {
+        if (!f.path_geojson) return;
+        const latlngs = lineStringToLatLngs(f.path_geojson);
+        if (!latlngs.length) return;
+
+        const color = palette[idx % palette.length];
+        const isFocused = (focusFlightId !== null && f.id === focusFlightId);
+
+        const line = L.polyline(latlngs, {
+          color: color,
+          weight: isFocused ? 5 : 3,
+          opacity: isFocused ? 0.9 : 0.6
+        }).addTo(flightsLayer);
+
+        line.bindPopup(`<b>${f.name}</b><br><small>Modelo: ${f.drone_model || '—'}</small>`);
+
+        try {
+          const lb = line.getBounds();
+          if (lb.isValid()) {
+            bounds.extend(lb);
+          }
+        } catch (e) {}
+
+        if (isFocused) {
+          focusedFlightLatLngs = latlngs;
+        }
+      });
+
+      // 6) Ajustar la vista y arrancar animación si hay vuelo seleccionado
       if (focusMarker) {
         const ll = focusMarker.getLatLng();
         map.setView(ll, 15);
         focusMarker.openPopup();
       } else if (bounds.isValid()) {
         map.fitBounds(bounds.pad(0.1));
+      }
+
+      if (focusedFlightLatLngs) {
+        startFlightAnimation(focusedFlightLatLngs);
+      } else {
+        stopAnimation();
       }
 
     }).catch(err => {

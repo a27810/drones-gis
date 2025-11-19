@@ -119,3 +119,10 @@ def flight_create(request):
     return render(request, 'flight_form.html', {
         'form': form,
     })
+
+def map3d_view(request):
+    """
+    Vista sencilla que carga la plantilla del visor 3D con Cesium.
+    Los datos se obtienen vía /api/flights/ desde JavaScript.
+    """
+    return render(request, 'map3d.html')

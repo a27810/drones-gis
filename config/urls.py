@@ -17,6 +17,7 @@ from core.views import (
     photo_list,
     flight_list,
     flight_create,
+    map3d_view,
 )
 
 router = DefaultRouter()
@@ -33,6 +34,7 @@ urlpatterns = [
     # Vistas HTML
     path('', home, name='home'),
     path('map/', map_view, name='map'),
+    path('map3d/', map3d_view, name='map3d_view'),
     path('upload/photo/', upload_photo, name='upload_photo'),
     path('photos/', photo_list, name='photo_list'),
     path('photos/<int:pk>/edit/', edit_photo, name='edit_photo'),

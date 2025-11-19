@@ -120,11 +120,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # añadida carpeta /static (junto a manage.py)
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',   # carpeta "static" en la raíz del proyecto (donde está img/camera-marker.png)
+]
 
 # Archivos subidos por el usuario (fotos, etc.)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 

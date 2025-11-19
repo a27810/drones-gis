@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Mapa 3D – Drones GIS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: system-ui, Arial, sans-serif;
+    }
+    header {
+      position: absolute;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(17,24,39,0.9);
+      color: #e5e7eb;
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    header a {
+      color: #a5b4fc;
+      text-decoration: none;
+      margin-left: 10px;
+    }
+    #cesiumContainer {
+      position: absolute;
+      top: 32px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+  </style>
+
+  <!-- CesiumJS desde CDN (sin necesidad de token) -->
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+    <header>
+    <div>
+        <strong>Visor 3D de vuelos de drones</strong> – Demo TFG
+    </div>
+    <div>
+        <!-- CAMBIA 'map_view' por 'map' -->
+        <a href="{% url 'map' %}">Mapa 2D</a>
+        <a href="{% url 'home' %}">Inicio</a>
+    </div>
+    </header>
+
+
+  <div id="cesiumContainer"></div>
+
+  <script>
+    // Viewer sin usar recursos de Cesium ion (no hace falta token)
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      imageryProvider: new Cesium.UrlTemplateImageryProvider({
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        credit: '© OpenStreetMap contributors'
+      }),
+      baseLayerPicker: false,
+      geocoder: false,
+      timeline: false,
+      animation: false,
+      terrainProvider: new Cesium.EllipsoidTerrainProvider()
+    });
+
+    viewer.scene.globe.enableLighting = false;
+
+    // Cargar vuelos desde la API
+    fetch('/api/flights/')
+      .then(r => r.json())
+      .then(flights => {
+        const palette = [
+          Cesium.Color.BLUE,
+          Cesium.Color.LIME,
+          Cesium.Color.ORANGE,
+          Cesium.Color.CYAN,
+          Cesium.Color.MAGENTA,
+          Cesium.Color.YELLOW
+        ];
+
+        flights.forEach((f, idx) => {
+          if (!f.path_geojson) return;
+
+          const gj = f.path_geojson;
+          let line = null;
+
+          if (gj.type === 'LineString') {
+            line = gj;
+          } else if (gj.type === 'Feature' &&
+                     gj.geometry &&
+                     gj.geometry.type === 'LineString') {
+            line = gj.geometry;
+          }
+
+          if (!line || !Array.isArray(line.coordinates) || !line.coordinates.length) {
+            return;
+          }
+
+          const positions = line.coordinates.map(coord => {
+            const lon = coord[0];
+            const lat = coord[1];
+            const alt = 200 + idx * 20; // altura para visualizar sobre terreno
+            return Cesium.Cartesian3.fromDegrees(lon, lat, alt);
+          });
+
+          const color = palette[idx % palette.length];
+
+          // Línea del vuelo
+          viewer.entities.add({
+            name: f.name,
+            polyline: {
+              positions: positions,
+              width: 3,
+              material: color
+            }
+          });
+
+          // Punto "dron" al inicio
+          viewer.entities.add({
+            name: 'Drone – ' + f.name,
+            position: positions[0],
+            point: {
+              pixelSize: 10,
+              color: color
+            },
+            description: `
+              <h3>${f.name}</h3>
+              <p><b>Modelo:</b> ${f.drone_model || '—'}</p>
+              <p><b>Fecha:</b> ${f.date || '—'}</p>
+            `
+          });
+        });
+
+        viewer.zoomTo(viewer.entities);
+      })
+      .catch(err => {
+        console.error('Error cargando vuelos para Cesium', err);
+      });
+  </script>
+</body>
+</html>

@@ -115,7 +115,9 @@
       </select>
       <a href="{% url 'home' %}" class="btn-link">Inicio</a>
       <a href="{% url 'photo_list' %}" class="btn-link">Galería</a>
+            <a href="{% url 'map3d_view' %}" class="btn-link">Mapa 3D</a>
       <a href="{% url 'upload_photo' %}" class="btn-link btn-primary">+ Subir foto</a>
+
     </div>
   </header>
 
@@ -168,6 +170,14 @@
       popupAnchor:  [0, -24]
     });
 
+    // --- Icono para el dron animado sobre la ruta ---
+    const droneIcon = L.icon({
+      iconUrl: '/static/img/camera-marker.png',
+      iconSize:     [32, 32],
+      iconAnchor:   [16, 16],
+      popupAnchor:  [0, -16]
+    });
+
     // --- Selector de vuelos en el header ---
     const flightSelect = document.getElementById('flight-select');
 
@@ -203,15 +213,13 @@
       }
     }
 
-    function startFlightAnimation(latlngs) {
+        function startFlightAnimation(latlngs) {
       stopAnimation();
       if (!latlngs || latlngs.length < 2) return;
 
-      animatedMarker = L.circleMarker(latlngs[0], {
-        radius: 6,
-        color: '#fbbf24',
-        fillColor: '#f59e0b',
-        fillOpacity: 1
+      // Creamos un marcador normal con icono de dron en el primer punto de la ruta
+      animatedMarker = L.marker(latlngs[0], {
+        icon: droneIcon
       }).addTo(map);
 
       let idx = 0;
@@ -220,6 +228,7 @@
         animatedMarker.setLatLng(latlngs[idx]);
       }, 700); // se mueve cada 0.7 segundos
     }
+
 
     // --- Control de capas (Fotos / Vuelos / Zonas) ---
     const overlays = {
@@ -368,12 +377,14 @@
       // 4) Pintar zonas (GeoJSON) con estilos según zone_type
       zones.forEach(z => {
         if (!z.geometry) return;
+
+        const zoneType = (z.zone_type || '').toLowerCase();
+
         const styleFn = function(feature) {
-          const t = (z.zone_type || '').toLowerCase();
           let color = '#10b981'; // verde por defecto (Permitida / Recomendada)
-          if (t.includes('prohib')) {
+          if (zoneType.includes('prohib')) {
             color = '#ef4444'; // roja
-          } else if (t.includes('restr')) {
+          } else if (zoneType.includes('restr')) {
             color = '#f97316'; // naranja
           }
           return {
@@ -395,8 +406,26 @@
           if (zb.isValid()) {
             bounds.extend(zb);
           }
+
+          // 🔴 Si es zona prohibida, creamos un "círculo de seguridad"
+          if (zoneType.includes('prohib')) {
+            const center = zb.getCenter();
+            // Radio de seguridad: 500 m (puedes subir a 1000 si quieres)
+            const safetyCircle = L.circle(center, {
+              radius: 500,
+              color: '#ef4444',
+              weight: 1,
+              fillColor: '#ef4444',
+              fillOpacity: 0.05
+            }).addTo(zonesLayer);
+
+            safetyCircle.bindPopup(
+              `<b>Zona de seguridad</b><br><small>Radio 500 m alrededor de "${z.name}"</small>`
+            );
+          }
         } catch (e) {}
       });
+
 
       // 5) Pintar vuelos (rutas) con colores distintos
       const palette = [

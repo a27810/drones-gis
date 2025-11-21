@@ -42,42 +42,42 @@
     }
   </style>
 
-  <!-- CesiumJS desde CDN (sin necesidad de token) -->
+  <!-- CesiumJS desde CDN -->
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
 </head>
 <body>
-    <header>
+  <header>
     <div>
-        <strong>Visor 3D de vuelos de drones</strong> – Demo TFG
+      <strong>Visor 3D de vuelos de drones</strong> – Demo TFG
     </div>
     <div>
-        <!-- CAMBIA 'map_view' por 'map' -->
-        <a href="{% url 'map' %}">Mapa 2D</a>
-        <a href="{% url 'home' %}">Inicio</a>
+      <a href="{% url 'map' %}">Mapa 2D</a>
+      <a href="{% url 'home' %}">Inicio</a>
     </div>
-    </header>
-
+  </header>
 
   <div id="cesiumContainer"></div>
 
   <script>
-    // Viewer sin usar recursos de Cesium ion (no hace falta token)
+
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1YmFjYzEwMS03ZDU5LTQ3MjktOWJmNy00OWQ1NTE5ZGI3NTUiLCJpZCI6MzYyNTMzLCJpYXQiOjE3NjM3MTY1MDZ9.rawU6MTUCdteKmx7SoDg_mzARrujegNBczkOT7fZCjY";
+
+    // Viewer 3D usando el terreno elipsoidal (sin createWorldTerrain)
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      imageryProvider: new Cesium.UrlTemplateImageryProvider({
-        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        credit: '© OpenStreetMap contributors'
-      }),
-      baseLayerPicker: false,
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      baseLayerPicker: true,
       geocoder: false,
       timeline: false,
-      animation: false,
-      terrainProvider: new Cesium.EllipsoidTerrainProvider()
+      animation: false
     });
 
     viewer.scene.globe.enableLighting = false;
+    viewer.scene.globe.depthTestAgainstTerrain = true;
 
+    // -----------------------------
     // Cargar vuelos desde la API
+    // -----------------------------
     fetch('/api/flights/')
       .then(r => r.json())
       .then(flights => {
@@ -98,9 +98,11 @@
 
           if (gj.type === 'LineString') {
             line = gj;
-          } else if (gj.type === 'Feature' &&
-                     gj.geometry &&
-                     gj.geometry.type === 'LineString') {
+          } else if (
+            gj.type === 'Feature' &&
+            gj.geometry &&
+            gj.geometry.type === 'LineString'
+          ) {
             line = gj.geometry;
           }
 
@@ -111,7 +113,7 @@
           const positions = line.coordinates.map(coord => {
             const lon = coord[0];
             const lat = coord[1];
-            const alt = 200 + idx * 20; // altura para visualizar sobre terreno
+            const alt = 200 + idx * 30;
             return Cesium.Cartesian3.fromDegrees(lon, lat, alt);
           });
 
@@ -133,7 +135,9 @@
             position: positions[0],
             point: {
               pixelSize: 10,
-              color: color
+              color: color,
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 1
             },
             description: `
               <h3>${f.name}</h3>
@@ -143,7 +147,9 @@
           });
         });
 
-        viewer.zoomTo(viewer.entities);
+        if (viewer.entities.values.length > 0) {
+          viewer.zoomTo(viewer.entities);
+        }
       })
       .catch(err => {
         console.error('Error cargando vuelos para Cesium', err);

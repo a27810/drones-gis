@@ -115,9 +115,8 @@
       </select>
       <a href="{% url 'home' %}" class="btn-link">Inicio</a>
       <a href="{% url 'photo_list' %}" class="btn-link">Galería</a>
-            <a href="{% url 'map3d_view' %}" class="btn-link">Mapa 3D</a>
+      <a href="{% url 'map3d_view' %}" class="btn-link">Mapa 3D</a>
       <a href="{% url 'upload_photo' %}" class="btn-link btn-primary">+ Subir foto</a>
-
     </div>
   </header>
 
@@ -129,6 +128,10 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin="">
   </script>
+
+  <!-- 🔥 Plugin Leaflet.heat para mapa de calor -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
   <script>
     // --- Leer parámetros de la URL ---
     const params = new URLSearchParams(window.location.search);
@@ -152,6 +155,13 @@
     const zonesLayer   = L.layerGroup().addTo(map);
     const measureLayer = L.layerGroup().addTo(map); // para la regla de distancia
 
+    // 🔥 Capa de mapa de calor (vacía al inicio)
+    const heatLayer = L.heatLayer([], {
+      radius: 25,   // tamaño de los "puntos calientes"
+      blur: 15,     // suavizado
+      maxZoom: 17
+    }).addTo(map);
+
     const bounds = L.latLngBounds([]);
     let focusMarker = null;
     let animatedMarker = null;
@@ -162,20 +172,11 @@
     }
 
     // --- Icono personalizado para fotos ---
-    // Crea por ejemplo un archivo static/img/camera-marker.png y apunta aquí.
     const photoIcon = L.icon({
       iconUrl: '/static/img/camera-marker.png',
       iconSize:     [28, 28],
       iconAnchor:   [14, 28],
       popupAnchor:  [0, -24]
-    });
-
-    // --- Icono para el dron animado sobre la ruta ---
-    const droneIcon = L.icon({
-      iconUrl: '/static/img/camera-marker.png',
-      iconSize:     [32, 32],
-      iconAnchor:   [16, 16],
-      popupAnchor:  [0, -16]
     });
 
     // --- Selector de vuelos en el header ---
@@ -213,13 +214,15 @@
       }
     }
 
-        function startFlightAnimation(latlngs) {
+    function startFlightAnimation(latlngs) {
       stopAnimation();
       if (!latlngs || latlngs.length < 2) return;
 
-      // Creamos un marcador normal con icono de dron en el primer punto de la ruta
-      animatedMarker = L.marker(latlngs[0], {
-        icon: droneIcon
+      animatedMarker = L.circleMarker(latlngs[0], {
+        radius: 6,
+        color: '#fbbf24',
+        fillColor: '#f59e0b',
+        fillOpacity: 1
       }).addTo(map);
 
       let idx = 0;
@@ -229,12 +232,12 @@
       }, 700); // se mueve cada 0.7 segundos
     }
 
-
-    // --- Control de capas (Fotos / Vuelos / Zonas) ---
+    // --- Control de capas (Fotos / Vuelos / Zonas / Mapa de calor) ---
     const overlays = {
       'Fotos': photoLayer,
       'Vuelos': flightsLayer,
-      'Zonas': zonesLayer
+      'Zonas': zonesLayer,
+      'Mapa de calor (fotos)': heatLayer   // 👈 NUEVA CAPA
     };
     L.control.layers(null, overlays, { collapsed: true }).addTo(map);
 
@@ -356,11 +359,15 @@
         photosToShow = photos.filter(p => p.flight === focusFlightId);
       }
 
-      // 3) Pintar fotos con icono personalizado
+      // 🔥 Array para puntos del mapa de calor
+      const heatPoints = [];
+
+      // 3) Pintar fotos con icono personalizado + alimentar mapa de calor
       photosToShow.forEach(p => {
         const lat = parseFloat(p.lat);
         const lon = parseFloat(p.lon);
         if (!isNaN(lat) && !isNaN(lon)) {
+          // Marcador normal
           const marker = L.marker([lat, lon], { icon: photoIcon }).addTo(photoLayer);
           const img = p.image ? `<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">` : '';
           const notes = p.notes || '';
@@ -368,23 +375,30 @@
 
           extendBoundsLatLon(lat, lon);
 
+          // Si es la foto seleccionada
           if (focusPhotoId !== null && p.id === focusPhotoId) {
             focusMarker = marker;
           }
+
+          // 👉 Añadimos al heatmap (lat, lon, intensidad)
+          heatPoints.push([lat, lon, 0.8]); // 0.8 = "peso" de la foto
         }
       });
+
+      // Si hay puntos, los cargamos en la capa de calor
+      if (heatPoints.length > 0) {
+        heatLayer.setLatLngs(heatPoints);
+      }
 
       // 4) Pintar zonas (GeoJSON) con estilos según zone_type
       zones.forEach(z => {
         if (!z.geometry) return;
-
-        const zoneType = (z.zone_type || '').toLowerCase();
-
         const styleFn = function(feature) {
+          const t = (z.zone_type || '').toLowerCase();
           let color = '#10b981'; // verde por defecto (Permitida / Recomendada)
-          if (zoneType.includes('prohib')) {
+          if (t.includes('prohib')) {
             color = '#ef4444'; // roja
-          } else if (zoneType.includes('restr')) {
+          } else if (t.includes('restr')) {
             color = '#f97316'; // naranja
           }
           return {
@@ -406,26 +420,8 @@
           if (zb.isValid()) {
             bounds.extend(zb);
           }
-
-          // 🔴 Si es zona prohibida, creamos un "círculo de seguridad"
-          if (zoneType.includes('prohib')) {
-            const center = zb.getCenter();
-            // Radio de seguridad: 500 m (puedes subir a 1000 si quieres)
-            const safetyCircle = L.circle(center, {
-              radius: 500,
-              color: '#ef4444',
-              weight: 1,
-              fillColor: '#ef4444',
-              fillOpacity: 0.05
-            }).addTo(zonesLayer);
-
-            safetyCircle.bindPopup(
-              `<b>Zona de seguridad</b><br><small>Radio 500 m alrededor de "${z.name}"</small>`
-            );
-          }
         } catch (e) {}
       });
-
 
       // 5) Pintar vuelos (rutas) con colores distintos
       const palette = [

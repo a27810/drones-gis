@@ -18,6 +18,7 @@ from core.views import (
     flight_list,
     flight_create,
     map3d_view,
+    delete_photo,
 )
 
 router = DefaultRouter()
@@ -38,9 +39,9 @@ urlpatterns = [
     path('upload/photo/', upload_photo, name='upload_photo'),
     path('photos/', photo_list, name='photo_list'),
     path('photos/<int:pk>/edit/', edit_photo, name='edit_photo'),
+    path('photos/<int:photo_id>/delete/', delete_photo, name='delete_photo'),
     path('flights/', flight_list, name='flight_list'),
     path('flights/new/', flight_create, name='flight_create'),
-
 ]
 
 # servir ficheros de media en desarrollo

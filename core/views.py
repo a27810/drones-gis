@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 
@@ -93,6 +94,21 @@ def photo_list(request):
     return render(request, 'photos_list.html', {
         'page_obj': page_obj,
     })
+
+
+def delete_photo(request, photo_id):
+    photo = get_object_or_404(Photo, id=photo_id)
+
+    # Eliminar archivo físico del disco
+    if photo.image:
+        photo.image.delete(save=False)
+
+    # Eliminar entrada en base de datos
+    photo.delete()
+
+    messages.success(request, "Foto eliminada correctamente.")
+    return redirect('photo_list')
+    
 
 def flight_list(request):
     """

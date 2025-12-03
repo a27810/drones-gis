@@ -10,6 +10,22 @@
     .topbar {display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
     a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; background:#fff;}
     a.btn-primary {background:#111; color:#fff; border-color:#111;}
+    
+    /* Botón eliminar */
+    a.btn-delete {
+        padding:8px 12px;
+        border-radius:6px;
+        background:#dc2626;      /* rojo */
+        color:#fff;
+        text-decoration:none;
+        font-weight:600;
+        border:1px solid #b91c1c;
+        margin-left: 4px;
+    }
+    a.btn-delete:hover {
+        background:#b91c1c;
+    }
+
     table {width:100%; border-collapse: collapse; background:#fff; border-radius:10px; overflow:hidden;}
     th, td {padding:8px 10px; border-bottom:1px solid #ddd; font-size:0.95em;}
     th {background:#eee; text-align:left;}
@@ -27,9 +43,11 @@
       <a href="{% url 'home' %}" class="btn">Inicio</a>
       <a href="{% url 'map' %}" class="btn">Mapa</a>
       <a href="{% url 'photo_list' %}" class="btn">Fotos</a>
+      <a href="{% url 'export_flights_geojson' %}" class="btn" download>Descargar GeoJSON</a>
       <a href="{% url 'flight_create' %}" class="btn btn-primary">+ Nuevo vuelo</a>
     </div>
   </div>
+
 
   {% if flights %}
     <table>
@@ -62,7 +80,23 @@
                 {% endif %}
             </td>
             <td>
-                <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn">Ver vuelo en mapa</a>
+                <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn">Ver vuelo</a>
+
+                {% if flight.path_geojson %}
+                    <a href="{% url 'export_single_flight' flight.id %}" class="btn" download>
+                        Exportar ruta
+                    </a>
+                {% else %}
+                    <span style="font-size:0.85em; color:#6b7280;">Sin ruta</span>
+                {% endif %}
+
+                <!-- NUEVO: botón eliminar -->
+                <a href="{% url 'delete_flight' flight.id %}"
+                   class="btn-delete"
+                   onclick="return confirm('¿Seguro que quieres eliminar este vuelo?');">
+                   🗑 Eliminar
+                </a>
+
             </td>
             </tr>
             {% endfor %}

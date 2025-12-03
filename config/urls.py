@@ -19,6 +19,10 @@ from core.views import (
     flight_create,
     map3d_view,
     delete_photo,
+    export_flights_geojson,
+    export_photos_geojson,
+    export_single_flight_geojson,
+    delete_flight,
 )
 
 router = DefaultRouter()
@@ -41,7 +45,11 @@ urlpatterns = [
     path('photos/<int:pk>/edit/', edit_photo, name='edit_photo'),
     path('photos/<int:photo_id>/delete/', delete_photo, name='delete_photo'),
     path('flights/', flight_list, name='flight_list'),
+    path('flights/<int:flight_id>/delete/', delete_flight, name='delete_flight'),
     path('flights/new/', flight_create, name='flight_create'),
+    path('export/photos.geojson', export_photos_geojson, name='export_photos_geojson'),
+    path('export/flights.geojson', export_flights_geojson, name='export_flights_geojson'),
+    path('flight/<int:flight_id>/export/', export_single_flight_geojson, name='export_single_flight'),
 ]
 
 # servir ficheros de media en desarrollo

@@ -116,6 +116,7 @@
       <a href="{% url 'home' %}" class="btn-link">Inicio</a>
       <a href="{% url 'photo_list' %}" class="btn-link">Galería</a>
       <a href="{% url 'map3d_view' %}" class="btn-link">Mapa 3D</a>
+      <a href="#" id="btn-export-geojson" class="btn-link">Exportar GeoJSON</a>
       <a href="{% url 'upload_photo' %}" class="btn-link btn-primary">+ Subir foto</a>
     </div>
   </header>
@@ -477,6 +478,23 @@
     }).catch(err => {
       console.error('Error cargando datos GIS', err);
     });
+
+        //  Botón "Exportar GeoJSON"
+    const exportBtn = document.getElementById('btn-export-geojson');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const params = new URLSearchParams(window.location.search);
+        const flightParam = params.get('flight');
+        let url = '{% url "export_photos_geojson" %}';
+        if (flightParam) {
+          url += '?flight=' + encodeURIComponent(flightParam);
+        }
+        // Dispara la descarga
+        window.location.href = url;
+      });
+    }
+
   </script>
 </body>
 </html>

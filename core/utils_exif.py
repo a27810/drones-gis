@@ -1,88 +1,92 @@
-# core/utils_exif.py
-from typing import Optional, Tuple, Any
-from PIL import Image
-from PIL.ExifTags import TAGS, GPSTAGS
-import piexif
+from __future__ import annotations
+from typing import Optional, Tuple
+from PIL import Image, ExifTags
 
-def _dms_to_dd(dms, ref) -> float:
-    """Convierte DMS (rationals) a decimal y aplica signo por Ref."""
-    def _to_float(x: Any) -> float:
-        # x puede ser un tuple (num, den) o ya float
-        if isinstance(x, (tuple, list)) and len(x) == 2:
-            num, den = x
-            return float(num) / float(den) if den else 0.0
-        return float(x)
-    degrees = _to_float(dms[0])
-    minutes = _to_float(dms[1])
-    seconds = _to_float(dms[2])
-    dd = degrees + minutes / 60.0 + seconds / 3600.0
-    ref = ref.decode() if isinstance(ref, (bytes, bytearray)) else ref
-    if ref in ('S', 'W'):
-        dd = -dd
-    return dd
 
-def _pillow_exif(img: Image.Image) -> Optional[Tuple[float, float]]:
-    """Intenta extraer GPS vía Pillow."""
+def _to_degrees(value) -> Optional[float]:
+    """
+    Convierte un valor EXIF de tipo GPS (tupla de racionales)
+    a grados decimales.
+    Ejemplo: ((40,1), (25,1), (12,1)) -> 40 + 25/60 + 12/3600
+    """
     try:
-        exif = img._getexif() or {}
-    except Exception:
-        exif = {}
-    if not exif:
-        return None
-    exif_map = {TAGS.get(k, k): v for k, v in exif.items()}
-    gps_raw = exif_map.get('GPSInfo')
-    if not gps_raw:
-        return None
-    gps = {GPSTAGS.get(k, k): v for k, v in gps_raw.items()}
-    lat, lat_ref = gps.get('GPSLatitude'), gps.get('GPSLatitudeRef')
-    lon, lon_ref = gps.get('GPSLongitude'), gps.get('GPSLongitudeRef')
-    if not (lat and lon and lat_ref and lon_ref):
-        return None
-    return _dms_to_dd(lat, lat_ref), _dms_to_dd(lon, lon_ref)
-
-def _piexif_from_bytes(data: bytes) -> Optional[Tuple[float, float]]:
-    """Intenta extraer GPS leyendo EXIF con piexif desde los bytes completos."""
-    try:
-        exif_dict = piexif.load(data)
+        # value suele ser una tupla de 3 tuplas: (deg, min, sec)
+        d = value[0][0] / value[0][1]
+        m = value[1][0] / value[1][1]
+        s = value[2][0] / value[2][1]
+        return d + (m / 60.0) + (s / 3600.0)
     except Exception:
         return None
-    gps = exif_dict.get('GPS') or {}
-    lat = gps.get(piexif.GPSIFD.GPSLatitude)
-    lat_ref = gps.get(piexif.GPSIFD.GPSLatitudeRef)
-    lon = gps.get(piexif.GPSIFD.GPSLongitude)
-    lon_ref = gps.get(piexif.GPSIFD.GPSLongitudeRef)
-    if not (lat and lon and lat_ref and lon_ref):
-        return None
-    return _dms_to_dd(lat, lat_ref), _dms_to_dd(lon, lon_ref)
+
 
 def extract_gps_from_image(file_obj) -> Optional[Tuple[float, float]]:
     """
-    Estrategia:
-      1) Pillow._getexif()
-      2) piexif.load() desde bytes del archivo
-    Devuelve (lat, lon) o None.
+    Extrae (lat, lon) en grados decimales desde los metadatos EXIF de una imagen.
+
+    - Tiene en cuenta GPSLatitudeRef (N/S)
+    - Tiene en cuenta GPSLongitudeRef (E/W)
+    - Devuelve None si no hay información válida.
     """
     try:
-        # 1) Pillow
-        try:
+        # Asegurarnos de leer desde el principio del fichero
+        if hasattr(file_obj, "open"):
+            # Para FieldFile (ImageField en Django)
+            file_obj.open()
+        if hasattr(file_obj, "seek"):
             file_obj.seek(0)
-        except Exception:
-            pass
-        img = Image.open(file_obj)
-        coords = _pillow_exif(img)
-        if coords:
-            return coords
 
-        # 2) piexif desde bytes
-        try:
-            file_obj.seek(0)
-            data = file_obj.read()
-        except Exception:
-            data = None
-        if data:
-            coords = _piexif_from_bytes(data)
-            if coords:
-                return coords
+        img = Image.open(file_obj)
+
+        exif_raw = img._getexif()
+        if not exif_raw:
+            return None
+
+        # Mapear IDs numéricos a nombres de etiqueta
+        exif = {
+            ExifTags.TAGS.get(tag, tag): value
+            for tag, value in exif_raw.items()
+        }
+
+        gps_info = exif.get("GPSInfo")
+        if not gps_info:
+            return None
+
+        # Decodificar sub-etiquetas GPS
+        gps_data = {
+            ExifTags.GPSTAGS.get(tag, tag): value
+            for tag, value in gps_info.items()
+        }
+
+        lat = lon = None
+
+        lat_vals = gps_data.get("GPSLatitude")
+        lat_ref = gps_data.get("GPSLatitudeRef")
+        lon_vals = gps_data.get("GPSLongitude")
+        lon_ref = gps_data.get("GPSLongitudeRef")
+
+        # --- Latitud ---
+        if lat_vals and lat_ref:
+            lat_deg = _to_degrees(lat_vals)
+            if lat_deg is not None:
+                # Sur (S) -> negativa
+                if str(lat_ref).upper().startswith("S"):
+                    lat_deg = -lat_deg
+                lat = lat_deg
+
+        # --- Longitud ---
+        if lon_vals and lon_ref:
+            lon_deg = _to_degrees(lon_vals)
+            if lon_deg is not None:
+                # Oeste (W) -> negativa
+                if str(lon_ref).upper().startswith("W"):
+                    lon_deg = -lon_deg
+                lon = lon_deg
+
+        if lat is not None and lon is not None:
+            return lat, lon
+
+        return None
+
     except Exception:
-        pass
-    return None
+        # Si algo peta leyendo EXIF, simplemente devolvemos None
+        return None

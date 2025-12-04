@@ -4,13 +4,15 @@
   <meta charset="utf-8">
   <title>Visor de mapa – Drones GIS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Leaflet CSS desde CDN -->
+
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   >
+
   <style>
     body {
       margin: 0;
@@ -69,11 +71,11 @@
       max-width: 220px;
     }
     #map {
-      height: calc(100vh - 52px); /* toda la pantalla menos el header */
+      height: calc(100vh - 52px);
       width: 100%;
     }
 
-    /* Estilos para controles personalizados (regla de distancia) */
+    /* Controles personalizados */
     .leaflet-control.custom-control {
       background: #111827;
       color: #e5e7eb;
@@ -123,40 +125,45 @@
 
   <div id="map"></div>
 
-  <!-- Leaflet JS desde CDN -->
+  <!-- Leaflet JS -->
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin="">
   </script>
 
-  <!-- 🔥 Plugin Leaflet.heat para mapa de calor -->
+  <!-- Leaflet.heat -->
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <script>
-    // --- Leer parámetros de la URL ---
+    // --- Parámetros de la URL ---
     const params = new URLSearchParams(window.location.search);
-    const photoIdParam = parseInt(params.get('photo'), 10);
+    const photoIdParam  = parseInt(params.get('photo'), 10);
     const flightIdParam = parseInt(params.get('flight'), 10);
 
-    const focusPhotoId = Number.isInteger(photoIdParam) ? photoIdParam : null;
+    const focusPhotoId  = Number.isInteger(photoIdParam)  ? photoIdParam  : null;
     const focusFlightId = Number.isInteger(flightIdParam) ? flightIdParam : null;
 
     // --- Crear mapa ---
-    const map = L.map('map').setView([40.4167, -3.7033], 6); // Centro en Madrid por defecto
+    const map = L.map('map').setView([40.4167, -3.7033], 6); // Madrid
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
+
+    // --- Capas base (por si luego añades más) ---
+    const baseLayers = {
+      "OpenStreetMap": osmBase
+    };
 
     // --- Grupos de capas ---
     const photoLayer   = L.layerGroup().addTo(map);
     const flightsLayer = L.layerGroup().addTo(map);
     const zonesLayer   = L.layerGroup().addTo(map);
-    const measureLayer = L.layerGroup().addTo(map); // para la regla de distancia
+    const measureLayer = L.layerGroup().addTo(map);
 
-    // 🔥 Capa de mapa de calor (vacía al inicio)
+    // Heatmap
     const heatLayer = L.heatLayer([], {
       radius: 25,
       blur: 15,
@@ -172,7 +179,7 @@
       try { bounds.extend([lat, lon]); } catch (e) {}
     }
 
-    // --- Icono personalizado para fotos ---
+    // Icono de fotos
     const photoIcon = L.icon({
       iconUrl: '/static/img/camera-marker.png',
       iconSize:     [28, 28],
@@ -180,57 +187,30 @@
       popupAnchor:  [0, -24]
     });
 
-    // --- Selector de vuelos en el header ---
     const flightSelect = document.getElementById('flight-select');
 
-    // --- Función para convertir GeoJSON LineString a array de LatLng ---
+    // --- Convierte LineString GeoJSON a array de [lat,lng] ---
     function lineStringToLatLngs(path_geojson) {
+      let line = null;
       if (!path_geojson) return [];
 
-      let geo;
-      try {
-        if (typeof path_geojson === 'string') {
-          geo = JSON.parse(path_geojson);
-        } else {
-          geo = path_geojson;
-        }
-      } catch (e) {
-        console.error('Error parseando path_geojson:', e, path_geojson);
-        return [];
-      }
-
-      let line = null;
-
-      // LineString directo
-      if (geo.type === 'LineString') {
-        line = geo;
-      }
-      // Feature con LineString
-      else if (geo.type === 'Feature' &&
-               geo.geometry &&
-               geo.geometry.type === 'LineString') {
-        line = geo.geometry;
-      }
-      // FeatureCollection: buscamos el primer LineString
-      else if (geo.type === 'FeatureCollection' &&
-               Array.isArray(geo.features)) {
-        const feature = geo.features.find(
-          ft => ft.geometry && ft.geometry.type === 'LineString'
-        );
-        if (feature) {
-          line = feature.geometry;
-        }
+      if (path_geojson.type === 'LineString') {
+        line = path_geojson;
+      } else if (path_geojson.type === 'Feature' &&
+                 path_geojson.geometry &&
+                 path_geojson.geometry.type === 'LineString') {
+        line = path_geojson.geometry;
       }
 
       if (!line || !Array.isArray(line.coordinates)) return [];
 
-      // GeoJSON coords: [lon, lat] -> Leaflet: [lat, lon]
-      return line.coordinates.map(function (coord) {
+      return line.coordinates.map(function(coord) {
+        // GeoJSON: [lon, lat]
         return [coord[1], coord[0]];
       });
     }
 
-    // --- Animación de dron sobre una ruta ---
+    // --- Animación del dron ---
     function stopAnimation() {
       if (animationIntervalId !== null) {
         clearInterval(animationIntervalId);
@@ -257,19 +237,22 @@
       animationIntervalId = setInterval(function() {
         idx = (idx + 1) % latlngs.length;
         animatedMarker.setLatLng(latlngs[idx]);
-      }, 700); // se mueve cada 0.7 segundos
+      }, 700);
     }
 
-    // --- Control de capas (Fotos / Vuelos / Zonas / Mapa de calor) ---
+    // --- Control de capas (ahora sí) ---
     const overlays = {
       'Fotos': photoLayer,
       'Vuelos': flightsLayer,
-      'Zonas': zonesLayer,
+      'Zonas (BD proyecto)': zonesLayer,
       'Mapa de calor (fotos)': heatLayer
+      // Más abajo añadiremos "Zonas UAS ENAIRE (local)" cuando carguemos el GeoJSON
     };
-    L.control.layers(null, overlays, { collapsed: true }).addTo(map);
 
-    // --- Control de medición de distancia ---
+    const layersControl = L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
+
+
+    // --- Regla de distancia ---
     let measureMode = false;
     let measurePoints = [];
     let measurePolyline = null;
@@ -305,9 +288,9 @@
     };
     measureControl.addTo(map);
 
-    const btnMeasure = document.getElementById('btn-measure');
+    const btnMeasure      = document.getElementById('btn-measure');
     const btnMeasureClear = document.getElementById('btn-measure-clear');
-    const measureInfo = document.getElementById('measure-info');
+    const measureInfo     = document.getElementById('measure-info');
 
     btnMeasure.addEventListener('click', function() {
       measureMode = !measureMode;
@@ -344,14 +327,13 @@
       measureInfo.textContent = 'Distancia: ' + formatDistance(d);
     });
 
-    // --- Cargar datos desde la API ---
+    // --- Cargar datos de la API propia (fotos, vuelos, zonas BD) ---
     Promise.all([
       fetch('/api/photos/').then(r => r.json()),
       fetch('/api/flights/').then(r => r.json()),
-      fetch('/api/zones/').then(r => r.json()),
+      fetch('/api/zones/').then(r => r.json())
     ]).then(([photos, flights, zones]) => {
-
-      // 1) Poblar el selector de vuelos
+      // 1) Selector de vuelos
       if (flightSelect) {
         flights.sort((a, b) => {
           if (a.date && b.date && a.date !== b.date) {
@@ -381,22 +363,21 @@
         });
       }
 
-      // 2) Si hay vuelo en la URL, filtramos las fotos a solo ese vuelo
+      // 2) Filtrar fotos por vuelo si viene en la URL
       let photosToShow = photos;
       if (focusFlightId !== null) {
         photosToShow = photos.filter(p => p.flight === focusFlightId);
       }
 
-      // 🔥 Array para puntos del mapa de calor
       const heatPoints = [];
 
-      // 3) Pintar fotos con icono personalizado + alimentar mapa de calor
+      // 3) Pintar fotos y heatmap
       photosToShow.forEach(p => {
         const lat = parseFloat(p.lat);
         const lon = parseFloat(p.lon);
         if (!isNaN(lat) && !isNaN(lon)) {
           const marker = L.marker([lat, lon], { icon: photoIcon }).addTo(photoLayer);
-          const img = p.image ? `<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">` : '';
+          const img   = p.image ? `<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">` : '';
           const notes = p.notes || '';
           marker.bindPopup(`<b>Foto #${p.id}</b><br>${img}<small>${notes}</small>`);
 
@@ -414,12 +395,13 @@
         heatLayer.setLatLngs(heatPoints);
       }
 
-      // 4) Pintar zonas (GeoJSON) con estilos según zone_type
+      // 4) Pintar zonas (modelo Zone de tu BD)
       zones.forEach(z => {
         if (!z.geometry) return;
+
         const styleFn = function(feature) {
           const t = (z.zone_type || '').toLowerCase();
-          let color = '#10b981';
+          let color = '#10b981'; // verde por defecto
           if (t.includes('prohib')) {
             color = '#ef4444';
           } else if (t.includes('restr')) {
@@ -447,7 +429,7 @@
         } catch (e) {}
       });
 
-      // 5) Pintar vuelos (rutas) con colores distintos
+      // 5) Pintar vuelos (rutas)
       const palette = [
         '#2563eb', '#16a34a', '#db2777',
         '#f97316', '#7c3aed', '#059669'
@@ -483,7 +465,7 @@
         }
       });
 
-      // 6) Ajustar la vista y arrancar animación si hay vuelo seleccionado
+      // 6) Ajustar vista y animación
       if (focusMarker) {
         const ll = focusMarker.getLatLng();
         map.setView(ll, 15);
@@ -502,7 +484,53 @@
       console.error('Error cargando datos GIS', err);
     });
 
-    // Botón "Exportar GeoJSON"
+    // --- Cargar Zonas UAS desde un GeoJSON local (sustituye a ENAIRE directo) ---
+    fetch('/static/geojson/enaire_uas_zones_example.geojson')
+      .then(r => {
+        if (!r.ok) {
+          console.warn('No se ha encontrado el GeoJSON local de zonas UAS ENAIRE.');
+          return null;
+        }
+        return r.json();
+      })
+      .then(data => {
+        if (!data) return;
+
+        const enaireLayer = L.geoJSON(data, {
+          style: function(feature) {
+            const t = (feature.properties && (feature.properties.class || feature.properties.type || '')).toLowerCase();
+            let color = '#1d4ed8';
+            if (t.includes('prohib')) {
+              color = '#b91c1c';
+            } else if (t.includes('restr') || t.includes('ctr')) {
+              color = '#ea580c';
+            }
+            return {
+              color: color,
+              weight: 2,
+              fillColor: color,
+              fillOpacity: 0.08
+            };
+          },
+          onEachFeature: function(feature, layer) {
+            const props = feature.properties || {};
+            const name = props.name || props.NOMBRE || 'Zona UAS';
+            const cls  = props.class || props.tipo || '';
+            layer.bindPopup(`<b>${name}</b><br><small>${cls}</small>`);
+          }
+        });
+
+        // añadimos la capa al mapa y al control de capas existente
+        enaireLayer.addTo(map);
+        overlays['Zonas UAS ENAIRE (local)'] = enaireLayer;
+        layersControl.addOverlay(enaireLayer, 'Zonas UAS ENAIRE (local)');
+      })
+      .catch(err => {
+        console.warn('Error cargando zonas UAS locales:', err);
+      });
+
+
+    // --- Botón Exportar GeoJSON de fotos ---
     const exportBtn = document.getElementById('btn-export-geojson');
     if (exportBtn) {
       exportBtn.addEventListener('click', function (e) {
@@ -516,7 +544,6 @@
         window.location.href = url;
       });
     }
-
   </script>
 </body>
 </html>

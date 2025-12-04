@@ -282,5 +282,30 @@ def export_photos_geojson(request):
     response["Content-Disposition"] = 'attachment; filename="photos.geojson"'
     return response
 
+def edit_flight_path(request, flight_id):
+    """Editor visual de rutas con Leaflet."""
+    flight = get_object_or_404(Flight, id=flight_id)
+    return render(request, "edit_flight_path.html", {"flight": flight})
 
+
+def api_save_flight_path(request, flight_id):
+    """Guarda el GeoJSON enviado desde Leaflet."""
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    flight = get_object_or_404(Flight, id=flight_id)
+
+    try:
+        data = json.loads(request.body)
+        geojson = data.get("geojson")
+
+        if not geojson:
+            return JsonResponse({"error": "No se recibió GeoJSON"}, status=400)
+
+        flight.path_geojson = geojson
+        flight.save()
+
+        return JsonResponse({"status": "ok"})
+    except Exception as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
 

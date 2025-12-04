@@ -8,29 +8,16 @@
     body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 960px; margin: auto; background:#f5f5f5;}
     h1 {margin-bottom: 8px;}
     .topbar {display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
-    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; background:#fff;}
+    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; background:#fff; font-size:0.9em;}
     a.btn-primary {background:#111; color:#fff; border-color:#111;}
-    
-    /* Botón eliminar */
-    a.btn-delete {
-        padding:8px 12px;
-        border-radius:6px;
-        background:#dc2626;      /* rojo */
-        color:#fff;
-        text-decoration:none;
-        font-weight:600;
-        border:1px solid #b91c1c;
-        margin-left: 4px;
-    }
-    a.btn-delete:hover {
-        background:#b91c1c;
-    }
-
+    a.btn-danger {background:#b91c1c; color:#fff; border-color:#7f1d1d;}
+    a.btn-secondary {background:#1f2937; color:#fff; border-color:#111827;}
     table {width:100%; border-collapse: collapse; background:#fff; border-radius:10px; overflow:hidden;}
-    th, td {padding:8px 10px; border-bottom:1px solid #ddd; font-size:0.95em;}
+    th, td {padding:8px 10px; border-bottom:1px solid #ddd; font-size:0.95em; vertical-align: middle;}
     th {background:#eee; text-align:left;}
     tr:hover {background:#f0f0f0;}
     .notes {font-size:0.9em; color:#444;}
+    .actions {display:flex; flex-wrap:wrap; gap:6px;}
   </style>
 </head>
 <body>
@@ -43,67 +30,72 @@
       <a href="{% url 'home' %}" class="btn">Inicio</a>
       <a href="{% url 'map' %}" class="btn">Mapa</a>
       <a href="{% url 'photo_list' %}" class="btn">Fotos</a>
-      <a href="{% url 'export_flights_geojson' %}" class="btn" download>Descargar GeoJSON</a>
       <a href="{% url 'flight_create' %}" class="btn btn-primary">+ Nuevo vuelo</a>
+      <a href="{% url 'export_flights_geojson' %}" class="btn">⬇ Exportar todos (GeoJSON)</a>
     </div>
   </div>
 
-
   {% if flights %}
     <table>
-        <thead>
-            <tr>
-            <th>Nombre</th>
-            <th>Fecha</th>
-            <th>Modelo de dron</th>
-            <th>Ruta</th>
-            <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for flight in flights %}
-            <tr>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Fecha</th>
+          <th>Modelo de dron</th>
+          <th>Ruta</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for flight in flights %}
+          <tr>
             <td>{{ flight.name }}</td>
             <td>
-                {% if flight.date %}
+              {% if flight.date %}
                 {{ flight.date|date:"d/m/Y" }}
-                {% else %}
+              {% else %}
                 —
-                {% endif %}
+              {% endif %}
             </td>
             <td>{{ flight.drone_model|default:"—" }}</td>
             <td>
-                {% if flight.path_geojson %}
+              {% if flight.path_geojson %}
                 <span style="font-size:0.9em; color:#065f46;">Definida</span>
-                {% else %}
+              {% else %}
                 <span style="font-size:0.9em; color:#6b7280;">Sin ruta</span>
-                {% endif %}
+              {% endif %}
             </td>
             <td>
-                <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn">Ver vuelo</a>
-
-                {% if flight.path_geojson %}
-                    <a href="{% url 'export_single_flight' flight.id %}" class="btn" download>
-                        Exportar ruta
-                    </a>
-                {% else %}
-                    <span style="font-size:0.85em; color:#6b7280;">Sin ruta</span>
+              <div class="actions">
+                <!-- Ver en mapa -->
+                {% if flight.id %}
+                  <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn">Ver en mapa</a>
                 {% endif %}
 
-                <!-- NUEVO: botón eliminar -->
-                <a href="{% url 'delete_flight' flight.id %}"
-                   class="btn-delete"
-                   onclick="return confirm('¿Seguro que quieres eliminar este vuelo?');">
-                   🗑 Eliminar
-                </a>
+                <!-- Exportar solo este vuelo -->
+                {% if flight.id %}
+                  <a href="{% url 'export_single_flight' flight.id %}" class="btn">⬇ Exportar GeoJSON</a>
+                {% endif %}
 
+                <!-- Editar ruta de este vuelo -->
+                {% if flight.id %}
+                  <a href="{% url 'edit_flight_path' flight.id %}" class="btn btn-secondary">✏ Editar ruta</a>
+                {% endif %}
+
+                <!-- Eliminar vuelo -->
+                {% if flight.id %}
+                  <a href="{% url 'delete_flight' flight.id %}"
+                     class="btn btn-danger"
+                     onclick="return confirm('¿Seguro que quieres eliminar este vuelo?');">
+                    🗑 Eliminar
+                  </a>
+                {% endif %}
+              </div>
             </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
-
-
   {% else %}
     <p>No hay vuelos registrados todavía.</p>
   {% endif %}

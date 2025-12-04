@@ -23,6 +23,8 @@ from core.views import (
     export_photos_geojson,
     export_single_flight_geojson,
     delete_flight,
+    edit_flight_path,
+    api_save_flight_path,
 )
 
 router = DefaultRouter()
@@ -50,6 +52,9 @@ urlpatterns = [
     path('export/photos.geojson', export_photos_geojson, name='export_photos_geojson'),
     path('export/flights.geojson', export_flights_geojson, name='export_flights_geojson'),
     path('flight/<int:flight_id>/export/', export_single_flight_geojson, name='export_single_flight'),
+    path('flights/<int:flight_id>/edit_path/', edit_flight_path, name='edit_flight_path'),
+    path('api/flights/<int:flight_id>/save_path/', api_save_flight_path, name='api_save_flight_path'),
+
 ]
 
 # servir ficheros de media en desarrollo

@@ -11,11 +11,10 @@ class FlightSerializer(serializers.ModelSerializer):
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        # flight será el ID del vuelo (o null)
         fields = ['id', 'flight', 'image', 'lat', 'lon', 'taken_at', 'notes']
 
 
 class ZoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Zone
-        fields = ['id', 'name', 'zone_type', 'geometry']
+        fields = ['id', 'name', 'description', 'polygon_geojson']

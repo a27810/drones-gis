@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Editar ruta – {{ flight.name }}</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet.draw -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <style>
+        body { margin:0; font-family: system-ui; }
+        #map { height: 90vh; }
+        header { padding:10px; background:#111827; color:white; }
+        button { padding:8px 14px; margin-top:10px; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>Editar ruta del vuelo: {{ flight.name }}</h2>
+    <a href="{% url 'flight_list' %}" style="color:#93c5fd">Volver al listado</a>
+</header>
+
+<div id="map"></div>
+
+<div style="padding:15px;">
+    <button id="saveBtn">💾 Guardar ruta</button>
+</div>
+
+<script>
+    // --- Función para obtener la cookie CSRF (oficial docs Django) ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie("csrftoken");
+
+    // Crear el mapa
+    const map = L.map('map').setView([40.4167, -3.7033], 6);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    // Capa donde se almacenará la polilínea dibujada
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Configurar las herramientas de dibujo
+    const drawControl = new L.Control.Draw({
+        draw: {
+            polygon: false,
+            circle: false,
+            marker: false,
+            rectangle: false,
+            circlemarker: false,
+            polyline: true
+        },
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+    map.addControl(drawControl);
+
+    // Si ya existe ruta en BD, cargarla
+    const existingGeoJson = JSON.parse('{{ flight.path_geojson|default:"null"|escapejs }}');
+    if (existingGeoJson) {
+        const layer = L.geoJSON(existingGeoJson).addTo(drawnItems);
+        map.fitBounds(layer.getBounds());
+    }
+
+    // Evento al crear una nueva línea
+    map.on('draw:created', event => {
+        drawnItems.clearLayers();  // Solo una ruta a la vez
+        drawnItems.addLayer(event.layer);
+    });
+
+    // Guardar GeoJSON
+    document.getElementById("saveBtn").onclick = function () {
+        if (drawnItems.getLayers().length === 0) {
+            alert("Dibuja primero una ruta.");
+            return;
+        }
+
+        const geojson = drawnItems.toGeoJSON();
+
+        fetch("{% url 'api_save_flight_path' flight.id %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({ geojson: geojson })
+        })
+        .then(async (r) => {
+            const text = await r.text();   // leemos como texto
+            try {
+                const resp = JSON.parse(text);
+                if (resp.status === "ok") {
+                    alert("Ruta guardada correctamente.");
+                } else {
+                    alert("Error desde servidor: " + (resp.error || "desconocido"));
+                }
+            } catch (e) {
+                console.error("Respuesta no-JSON:", text);
+                alert("La respuesta del servidor no es JSON válido (¿CSRF 403 o error 500?).");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error en la petición: " + err);
+        });
+    };
+</script>
+</body>
+</html>

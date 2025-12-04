@@ -158,8 +158,8 @@
 
     // 🔥 Capa de mapa de calor (vacía al inicio)
     const heatLayer = L.heatLayer([], {
-      radius: 25,   // tamaño de los "puntos calientes"
-      blur: 15,     // suavizado
+      radius: 25,
+      blur: 15,
       maxZoom: 17
     }).addTo(map);
 
@@ -185,20 +185,47 @@
 
     // --- Función para convertir GeoJSON LineString a array de LatLng ---
     function lineStringToLatLngs(path_geojson) {
-      let line = null;
       if (!path_geojson) return [];
 
-      // Permitimos directamente LineString o Feature con LineString
-      if (path_geojson.type === 'LineString') {
-        line = path_geojson;
-      } else if (path_geojson.type === 'Feature' && path_geojson.geometry && path_geojson.geometry.type === 'LineString') {
-        line = path_geojson.geometry;
+      let geo;
+      try {
+        if (typeof path_geojson === 'string') {
+          geo = JSON.parse(path_geojson);
+        } else {
+          geo = path_geojson;
+        }
+      } catch (e) {
+        console.error('Error parseando path_geojson:', e, path_geojson);
+        return [];
+      }
+
+      let line = null;
+
+      // LineString directo
+      if (geo.type === 'LineString') {
+        line = geo;
+      }
+      // Feature con LineString
+      else if (geo.type === 'Feature' &&
+               geo.geometry &&
+               geo.geometry.type === 'LineString') {
+        line = geo.geometry;
+      }
+      // FeatureCollection: buscamos el primer LineString
+      else if (geo.type === 'FeatureCollection' &&
+               Array.isArray(geo.features)) {
+        const feature = geo.features.find(
+          ft => ft.geometry && ft.geometry.type === 'LineString'
+        );
+        if (feature) {
+          line = feature.geometry;
+        }
       }
 
       if (!line || !Array.isArray(line.coordinates)) return [];
 
-      return line.coordinates.map(function(coord) {
-        // GeoJSON: [lon, lat]
+      // GeoJSON coords: [lon, lat] -> Leaflet: [lat, lon]
+      return line.coordinates.map(function (coord) {
         return [coord[1], coord[0]];
       });
     }
@@ -238,7 +265,7 @@
       'Fotos': photoLayer,
       'Vuelos': flightsLayer,
       'Zonas': zonesLayer,
-      'Mapa de calor (fotos)': heatLayer   // 👈 NUEVA CAPA
+      'Mapa de calor (fotos)': heatLayer
     };
     L.control.layers(null, overlays, { collapsed: true }).addTo(map);
 
@@ -368,7 +395,6 @@
         const lat = parseFloat(p.lat);
         const lon = parseFloat(p.lon);
         if (!isNaN(lat) && !isNaN(lon)) {
-          // Marcador normal
           const marker = L.marker([lat, lon], { icon: photoIcon }).addTo(photoLayer);
           const img = p.image ? `<img src="${p.image}" style="max-width:220px;display:block;margin:6px 0">` : '';
           const notes = p.notes || '';
@@ -376,17 +402,14 @@
 
           extendBoundsLatLon(lat, lon);
 
-          // Si es la foto seleccionada
           if (focusPhotoId !== null && p.id === focusPhotoId) {
             focusMarker = marker;
           }
 
-          // 👉 Añadimos al heatmap (lat, lon, intensidad)
-          heatPoints.push([lat, lon, 0.8]); // 0.8 = "peso" de la foto
+          heatPoints.push([lat, lon, 0.8]);
         }
       });
 
-      // Si hay puntos, los cargamos en la capa de calor
       if (heatPoints.length > 0) {
         heatLayer.setLatLngs(heatPoints);
       }
@@ -396,11 +419,11 @@
         if (!z.geometry) return;
         const styleFn = function(feature) {
           const t = (z.zone_type || '').toLowerCase();
-          let color = '#10b981'; // verde por defecto (Permitida / Recomendada)
+          let color = '#10b981';
           if (t.includes('prohib')) {
-            color = '#ef4444'; // roja
+            color = '#ef4444';
           } else if (t.includes('restr')) {
-            color = '#f97316'; // naranja
+            color = '#f97316';
           }
           return {
             color: color,
@@ -479,7 +502,7 @@
       console.error('Error cargando datos GIS', err);
     });
 
-        //  Botón "Exportar GeoJSON"
+    // Botón "Exportar GeoJSON"
     const exportBtn = document.getElementById('btn-export-geojson');
     if (exportBtn) {
       exportBtn.addEventListener('click', function (e) {
@@ -490,7 +513,6 @@
         if (flightParam) {
           url += '?flight=' + encodeURIComponent(flightParam);
         }
-        // Dispara la descarga
         window.location.href = url;
       });
     }

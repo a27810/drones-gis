@@ -1,0 +1,204 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Drones GIS{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fuente sencilla del sistema -->
+  <style>
+    :root {
+      --bg-body: #020617;
+      --bg-card: rgba(15, 23, 42, 0.98);
+      --border-subtle: rgba(51, 65, 85, 0.9);
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.12);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   sans-serif;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 45%, #000 100%);
+      color: var(--text-main);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1200px;
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .app-card {
+      background: var(--bg-card);
+      border-radius: 24px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.9);
+      padding: 14px 18px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    header.app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(30, 64, 175, 0.6);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #4ade80, #22c55e 45%, #16a34a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #022c22;
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.7);
+    }
+
+    .brand-text-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .brand-text-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    nav.app-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .nav-link {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      text-decoration: none;
+      color: #e5e7eb;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-link:hover {
+      border-color: rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .nav-link-primary {
+      background: linear-gradient(to right, #22c55e, #16a34a);
+      color: #022c22;
+      font-weight: 600;
+      box-shadow: 0 0 18px rgba(34, 197, 94, 0.5);
+    }
+
+    .nav-link-primary:hover {
+      box-shadow: 0 0 24px rgba(34, 197, 94, 0.8);
+    }
+
+    main.app-main {
+      margin-top: 4px;
+    }
+
+    footer.app-footer {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Para que Leaflet se vea bien en este tema */
+    .leaflet-container {
+      background: #020617;
+      font-family: inherit;
+    }
+
+    a {
+      color: #93c5fd;
+    }
+
+    a:hover {
+      color: #bfdbfe;
+    }
+  </style>
+
+  {# Bloque para CSS adicional de cada vista #}
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <div class="app-card">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-logo">DG</div>
+          <div>
+            <div class="brand-text-title">Drones&nbsp;GIS</div>
+            <div class="brand-text-subtitle">Visor de vuelos, fotos y zonas UAS</div>
+          </div>
+        </div>
+        <nav class="app-nav">
+          <a href="{% url 'home' %}" class="nav-link">Inicio</a>
+          <a href="{% url 'map' %}" class="nav-link">Mapa 2D</a>
+          <a href="{% url 'map3d_view' %}" class="nav-link">Mapa 3D</a>
+          <a href="{% url 'photo_list' %}" class="nav-link">Galería</a>
+          <a href="{% url 'flight_list' %}" class="nav-link">Vuelos</a>
+          <a href="{% url 'upload_photo' %}" class="nav-link nav-link-primary">+ Subir foto</a>
+        </nav>
+      </header>
+
+      <main class="app-main">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <footer class="app-footer">
+      Proyecto TFG – Drones GIS · Visualización de vuelos, fotografías y zonas UAS (ENAIRE / manuales)
+    </footer>
+  </div>
+
+  {# Bloque para JS adicional de cada vista #}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

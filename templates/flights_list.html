@@ -1,103 +1,308 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Vuelos de drones</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 960px; margin: auto; background:#f5f5f5;}
-    h1 {margin-bottom: 8px;}
-    .topbar {display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
-    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; background:#fff; font-size:0.9em;}
-    a.btn-primary {background:#111; color:#fff; border-color:#111;}
-    a.btn-danger {background:#b91c1c; color:#fff; border-color:#7f1d1d;}
-    a.btn-secondary {background:#1f2937; color:#fff; border-color:#111827;}
-    table {width:100%; border-collapse: collapse; background:#fff; border-radius:10px; overflow:hidden;}
-    th, td {padding:8px 10px; border-bottom:1px solid #ddd; font-size:0.95em; vertical-align: middle;}
-    th {background:#eee; text-align:left;}
-    tr:hover {background:#f0f0f0;}
-    .notes {font-size:0.9em; color:#444;}
-    .actions {display:flex; flex-wrap:wrap; gap:6px;}
-  </style>
-</head>
-<body>
-  <div class="topbar">
+{% extends "base.html" %}
+
+{% block title %}Vuelos registrados – Drones GIS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    background: #020617;
+    color: #e5e7eb;
+  }
+
+  .btn-primary {
+    background: #10b981;
+    border-color: #10b981;
+    color: #020617;
+    font-weight: 500;
+  }
+
+  .btn-secondary {
+    border-color: #374151;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border-color: #4b5563;
+  }
+
+  .btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .flight-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+
+  .flight-toolbar input[type="search"] {
+    background: #020617;
+    border-radius: 999px;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+    min-width: 220px;
+  }
+
+  .flight-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .flight-card {
+    background: #020617;
+    border-radius: 18px;
+    border: 1px solid #111827;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    padding: 0.85rem 1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto;
+    gap: 0.8rem;
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .flight-card {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: flex-start;
+    }
+  }
+
+  .flight-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .flight-title {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .flight-title span {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-left: 0.4rem;
+  }
+
+  .flight-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.7rem;
+    border: 1px solid #4b5563;
+    color: #9ca3af;
+  }
+
+  .flight-notes {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin-top: 0.2rem;
+  }
+
+  .flight-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+
+  .flight-stats-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+  }
+
+  .flight-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-end;
+  }
+
+  .flight-actions .btn {
+    width: max-content;
+    justify-content: center;
+  }
+
+  .empty-state {
+    margin-top: 2.5rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.9rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="page-header">
     <div>
-      <h1>Vuelos registrados</h1>
-      <p style="margin:0; color:#555;">Listado de vuelos realizados con drones.</p>
+      <h1 class="page-title">Vuelos registrados</h1>
+      <p class="page-subtitle">
+        Listado de vuelos con su ruta, modelo de dron y estadísticas básicas.
+      </p>
     </div>
-    <div>
-      <a href="{% url 'home' %}" class="btn">Inicio</a>
-      <a href="{% url 'map' %}" class="btn">Mapa</a>
-      <a href="{% url 'photo_list' %}" class="btn">Fotos</a>
-      <a href="{% url 'flight_create' %}" class="btn btn-primary">+ Nuevo vuelo</a>
-      <a href="{% url 'export_flights_geojson' %}" class="btn">⬇ Exportar todos (GeoJSON)</a>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{% url 'map' %}" class="btn btn-secondary">🗺️ Ver mapa</a>
+      <a href="{% url 'flight_create' %}" class="btn btn-primary">➕ Nuevo vuelo</a>
     </div>
   </div>
 
+  <!-- Barra sencilla de búsqueda (opcional, aunque la vista no filtre aún) -->
+  <form method="get" class="flight-toolbar">
+    <input type="search"
+           name="q"
+           value="{{ request.GET.q }}"
+           placeholder="Buscar por nombre, lugar o modelo de dron…">
+    <button class="btn btn-outline" type="submit">🔍 Buscar</button>
+  </form>
+
   {% if flights %}
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Fecha</th>
-          <th>Modelo de dron</th>
-          <th>Ruta</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for flight in flights %}
-          <tr>
-            <td>{{ flight.name }}</td>
-            <td>
+    <div class="flight-list">
+      {% for flight in flights %}
+        <article class="flight-card">
+          <!-- Columna principal: info básica -->
+          <div class="flight-main">
+            <div class="flight-title">
+              {{ flight.name }}
+              <span>#{{ flight.id }}</span>
+            </div>
+
+            <div class="flight-meta">
               {% if flight.date %}
-                {{ flight.date|date:"d/m/Y" }}
-              {% else %}
-                —
+                <span>📅 {{ flight.date }}</span>
               {% endif %}
-            </td>
-            <td>{{ flight.drone_model|default:"—" }}</td>
-            <td>
+              {% if flight.drone_model %}
+                <span>🛩️ {{ flight.drone_model }}</span>
+              {% endif %}
+              {% if flight.location %}
+                <span>📍 {{ flight.location }}</span>
+              {% endif %}
               {% if flight.path_geojson %}
-                <span style="font-size:0.9em; color:#065f46;">Definida</span>
+                <span class="chip">Ruta guardada</span>
               {% else %}
-                <span style="font-size:0.9em; color:#6b7280;">Sin ruta</span>
+                <span class="chip">Sin ruta</span>
               {% endif %}
-            </td>
-            <td>
-              <div class="actions">
-                <!-- Ver en mapa -->
-                {% if flight.id %}
-                  <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn">Ver en mapa</a>
-                {% endif %}
+            </div>
 
-                <!-- Exportar solo este vuelo -->
-                {% if flight.id %}
-                  <a href="{% url 'export_single_flight' flight.id %}" class="btn">⬇ Exportar GeoJSON</a>
-                {% endif %}
+            {% if flight.notes %}
+              <p class="flight-notes">
+                {{ flight.notes|truncatechars:140 }}
+              </p>
+            {% endif %}
+          </div>
 
-                <!-- Editar ruta de este vuelo -->
-                {% if flight.id %}
-                  <a href="{% url 'edit_flight_path' flight.id %}" class="btn btn-secondary">✏ Editar ruta</a>
+          <!-- Columna stats -->
+          <div class="flight-stats">
+            <div class="flight-stats-row">
+              <span>⏱️ Duración aprox.</span>
+              <span>
+                {% if flight.duration_min %}
+                  {{ flight.duration_min }} min
+                {% else %}
+                  —
                 {% endif %}
+              </span>
+            </div>
+            <div class="flight-stats-row">
+              <span>📏 Distancia estimada</span>
+              <span>
+                {% if flight.distance_km %}
+                  {{ flight.distance_km }} km
+                {% else %}
+                  —
+                {% endif %}
+              </span>
+            </div>
+            <div class="flight-stats-row">
+              <span>🖼️ Nº de fotos</span>
+              <span>
+                {% if flight.photo_count %}
+                  {{ flight.photo_count }}
+                {% else %}
+                  0
+                {% endif %}
+              </span>
+            </div>
+          </div>
 
-                <!-- Eliminar vuelo -->
-                {% if flight.id %}
-                  <a href="{% url 'delete_flight' flight.id %}"
-                     class="btn btn-danger"
-                     onclick="return confirm('¿Seguro que quieres eliminar este vuelo?');">
-                    🗑 Eliminar
-                  </a>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+          <!-- Columna acciones -->
+          <div class="flight-actions">
+            <a href="{% url 'map' %}?flight={{ flight.id }}"
+               class="btn btn-outline">
+              🗺️ Ver en mapa
+            </a>
+
+            {% if flight.path_geojson %}
+              <a href="{% url 'edit_flight_path' flight.id %}"
+                 class="btn btn-secondary">
+                ✏️ Editar ruta
+              </a>
+            {% else %}
+              <a href="{% url 'edit_flight_path' flight.id %}"
+                 class="btn btn-secondary">
+                ➕ Dibujar ruta
+              </a>
+            {% endif %}
+          </div>
+
+        </article>
+      {% endfor %}
+    </div>
   {% else %}
-    <p>No hay vuelos registrados todavía.</p>
+    <div class="empty-state">
+      <h3>No hay vuelos registrados</h3>
+      <p>Crea tu primer vuelo con <strong>“Nuevo vuelo”</strong> para empezar a registrar rutas.</p>
+    </div>
   {% endif %}
-</body>
-</html>
+</section>
+{% endblock %}

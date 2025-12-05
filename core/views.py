@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from .models import Flight, Photo, Zone
 from .serializers import FlightSerializer, PhotoSerializer, ZoneSerializer
 from .forms import PhotoUploadForm, FlightForm
+from django.db.models import Q
 
 
 # -----------------------
@@ -36,7 +37,7 @@ class ZoneViewSet(viewsets.ModelViewSet):
 
 def home(request):
     """Pantalla de bienvenida."""
-    return render(request, 'welcome.html')
+    return render(request, 'home.html')
 
 
 def map_view(request):
@@ -85,16 +86,37 @@ def edit_photo(request, pk):
 
 def photo_list(request):
     """
-    Listado/paginación de todas las fotos.
+    Galería de fotos con filtro por vuelo y búsqueda por texto.
     """
-    photos_qs = Photo.objects.all().order_by('-taken_at', '-id')
-    paginator = Paginator(photos_qs, 10)  # 10 por página
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    from .models import Photo, Flight
 
-    return render(request, 'photos_list.html', {
-        'page_obj': page_obj,
-    })
+    # Ordenamos por fecha de toma (si la hay) y luego por id
+    photos = Photo.objects.select_related('flight').order_by('-taken_at', '-id')
+
+    # Filtro por vuelo
+    selected_flight_id = request.GET.get('flight') or ""
+    if selected_flight_id:
+        photos = photos.filter(flight_id=selected_flight_id)
+
+    # Búsqueda por texto (en notas, nombre de vuelo o ubicación)
+    search_text = request.GET.get('q') or ""
+    if search_text:
+        photos = photos.filter(
+            Q(notes__icontains=search_text) |
+            Q(flight__name__icontains=search_text) |
+            Q(flight__location__icontains=search_text)
+        )
+
+    flights = Flight.objects.all().order_by('-date', 'id')
+
+    context = {
+        "photos": photos,
+        "flights": flights,
+        "selected_flight_id": selected_flight_id,
+        "search_text": search_text,
+    }
+    return render(request, "photos_list.html", context)
+
 
 
 def delete_photo(request, photo_id):

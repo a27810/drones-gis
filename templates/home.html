@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio – Drones GIS{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .home-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .home-hero {
+      border-radius: 18px;
+      padding: 20px 20px 18px 20px;
+      background: radial-gradient(circle at top left, #22c55e22, #020617 55%, #000 100%);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .home-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .home-badge span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 7px rgba(34, 197, 94, 0.9);
+    }
+
+    .home-title {
+      font-size: 1.5rem;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+
+    .home-title-gradient {
+      background: linear-gradient(to right, #e5e7eb, #22c55e);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .home-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 32rem;
+      margin-bottom: 16px;
+    }
+
+    .home-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .btn-main {
+      border-radius: 999px;
+      border: none;
+      padding: 9px 16px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      background: linear-gradient(to right, #22c55e, #16a34a);
+      color: #022c22;
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.55);
+      transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 26px rgba(34, 197, 94, 0.7);
+    }
+
+    .btn-ghost {
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.84rem;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.16s ease-out;
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(226, 232, 240, 0.85);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .home-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      padding: 3px 7px;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .home-right {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      border-radius: 16px;
+      padding: 12px 12px 11px 12px;
+      background: radial-gradient(circle at top, #020617, #020617 45%, #000 100%);
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.85);
+      font-size: 0.8rem;
+    }
+
+    .card + .card {
+      margin-top: 4px;
+    }
+
+    .card-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title span.icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .card-text {
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: #6b7280;
+    }
+
+    .tag {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 2px 7px;
+      font-size: 0.7rem;
+    }
+
+    @media (max-width: 800px) {
+      .home-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="home-grid">
+    <!-- COLUMNA IZQUIERDA: HERO -->
+    <section class="home-hero">
+      <div class="home-badge">
+        <span></span>
+        Panel GIS para operaciones con drones
+      </div>
+
+      <h1 class="home-title">
+        Controla tus <span class="home-title-gradient">vuelos y fotografías</span><br>
+        sobre zonas UAS críticas.
+      </h1>
+
+      <p class="home-text">
+        Visualiza vuelos, fotos geolocalizadas y zonas de restricción en un visor GIS
+        sencillo. Este panel está pensado para demostrar, en un contexto académico,
+        cómo integrar <strong>mapas, datos y normativa UAS</strong> en una sola aplicación web.
+      </p>
+
+      <div class="home-actions">
+        <a href="{% url 'map' %}" class="btn-main">
+          Ver mapa operativo
+        </a>
+        <a href="{% url 'flight_list' %}" class="btn-ghost">
+          Gestionar vuelos
+        </a>
+      </div>
+
+      <div class="home-pills">
+        <span class="pill">📍 Fotos con coordenadas GPS</span>
+        <span class="pill">🛰️ Capas GeoJSON de zonas UAS</span>
+        <span class="pill">✈️ Rutas de vuelo (LineString)</span>
+        <span class="pill">🔥 Mapa de calor de fotografías</span>
+      </div>
+    </section>
+
+    <!-- COLUMNA DERECHA: TARJETAS RESUMEN -->
+    <section class="home-right">
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">①</span> Flujo básico de trabajo
+        </div>
+        <p class="card-text">
+          Crea un vuelo, sube fotografías con metadatos GPS o coordenadas manuales
+          y visualiza todo sobre el mapa. Incluye exportación GeoJSON para reutilizar
+          los datos en otros sistemas GIS.
+        </p>
+        <div class="card-footer">
+          <span class="tag">Export GeoJSON</span>
+          <span>API REST con Django + DRF</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">②</span> Capas de zonas UAS de ejemplo
+        </div>
+        <p class="card-text">
+          El visor incluye una capa de <strong>zonas de exclusión simuladas</strong>
+          (aeropuertos, áreas militares, etc.), cargadas como GeoJSON, para mostrar
+          cómo se integrarían datos oficiales de un proveedor como ENAIRE.
+        </p>
+        <div class="card-footer">
+          <span class="tag">Capa “Zonas UAS”</span>
+          <span>Datos de demostración</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">③</span> Enfoque académico
+        </div>
+        <p class="card-text">
+          Esta plataforma forma parte del TFG del CFGS de Desarrollo de Aplicaciones Web.
+          El objetivo es demostrar arquitectura web, buenas práticas y uso de
+          tecnologías GIS, no reemplazar herramientas de planificación reales.
+        </p>
+        <div class="card-footer">
+          <span class="tag">Proyecto TFG</span>
+          <span>San Valero · DAW</span>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

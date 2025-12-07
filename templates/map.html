@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Mapa GIS – Drones GIS{% endblock %}
 
@@ -222,11 +223,12 @@
 
     // Icono para fotos
     const photoIcon = L.icon({
-      iconUrl: '/static/img/camera-marker.png',
+      iconUrl: "{% static 'img/camera-marker.png' %}",
       iconSize:    [28, 28],
       iconAnchor:  [14, 28],
       popupAnchor: [0, -24]
     });
+
 
     const flightSelect = document.getElementById('flight-select');
 

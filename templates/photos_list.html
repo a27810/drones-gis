@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Galería de fotos – Drones GIS{% endblock %}
+{% block title %}Galería de fotografías – Drones GIS{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -27,179 +27,65 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.4rem 0.8rem;
+    padding: 0.4rem 0.85rem;
     border-radius: 999px;
     font-size: 0.85rem;
     border: 1px solid transparent;
     text-decoration: none;
     cursor: pointer;
-    background: #111827;
-    color: #e5e7eb;
-  }
-
-  .btn-primary {
-    background: #10b981;
-    border-color: #10b981;
-    color: #020617;
-    font-weight: 500;
-  }
-
-  .btn-secondary {
-    border-color: #374151;
-  }
-
-  .btn-outline {
-    background: transparent;
-    border-color: #4b5563;
-  }
-
-  .btn:hover {
-    filter: brightness(1.05);
-  }
-
-  .photo-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-    align-items: center;
-  }
-
-  .photo-toolbar select {
     background: #020617;
-    border-radius: 999px;
-    border: 1px solid #4b5563;
     color: #e5e7eb;
-    font-size: 0.8rem;
-    padding: 0.35rem 0.7rem;
-    min-width: 180px;
   }
 
-  .photo-toolbar input[type="search"] {
-    background: #020617;
-    border-radius: 999px;
-    border: 1px solid #4b5563;
-    color: #e5e7eb;
-    font-size: 0.8rem;
-    padding: 0.35rem 0.7rem;
-    min-width: 220px;
-  }
+  .btn-outline { border-color:#4b5563; background:transparent; }
+  .btn-secondary { border-color:#374151; }
+  .btn-primary { background:#10b981; border-color:#10b981; color:#020617; }
+  .btn-danger { background:#b91c1c; border-color:#b91c1c; color:#f9fafb; }
 
-  .photo-grid {
+  .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.2rem;
   }
 
   .photo-card {
     background: #020617;
     border-radius: 18px;
-    overflow: hidden;
     border: 1px solid #111827;
     box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
   }
 
-  .photo-thumb-wrapper {
-    position: relative;
-    padding-top: 65%; /* relación de aspecto aproximada */
-    overflow: hidden;
-  }
-
-  .photo-thumb-wrapper img {
-    position: absolute;
-    inset: 0;
+  .photo-card img {
     width: 100%;
-    height: 100%;
+    height: 190px;
     object-fit: cover;
-    transition: transform .25s ease-out;
-  }
-
-  .photo-card:hover .photo-thumb-wrapper img {
-    transform: scale(1.04);
-  }
-
-  .photo-badge {
-    position: absolute;
-    left: 0.75rem;
-    bottom: 0.75rem;
-    background: rgba(15,23,42,0.85);
-    border-radius: 999px;
-    padding: 0.15rem 0.5rem;
-    font-size: 0.7rem;
-    color: #e5e7eb;
-    border: 1px solid rgba(148,163,184,0.6);
   }
 
   .photo-body {
-    padding: 0.8rem 0.9rem 0.9rem;
+    padding: 0.9rem 1.1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .photo-title {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.4rem;
-    align-items: baseline;
-  }
-
-  .photo-title-main {
-    font-weight: 600;
-  }
-
-  .photo-title-id {
-    font-size: 0.7rem;
-    color: #9ca3af;
-  }
-
-  .photo-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem 0.9rem;
-    color: #9ca3af;
-  }
-
-  .photo-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .photo-notes {
-    color: #9ca3af;
-    font-size: 0.78rem;
+    gap: 0.45rem;
+    color: #e5e7eb;
+    font-size: 0.85rem;
   }
 
   .photo-actions {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: space-between;
     gap: 0.4rem;
-    margin-top: 0.2rem;
-  }
-
-  .empty-state {
-    margin-top: 2.5rem;
-    text-align: center;
-    color: #9ca3af;
-    font-size: 0.9rem;
-  }
-
-  .empty-state h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.3rem;
+    padding: 0.8rem 1.1rem;
   }
 
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
     border-radius: 999px;
-    padding: 0.1rem 0.45rem;
-    font-size: 0.7rem;
     border: 1px solid #4b5563;
     color: #9ca3af;
   }
@@ -208,117 +94,64 @@
 
 {% block content %}
 <section>
+
   <div class="page-header">
     <div>
-      <h1 class="page-title">Galería de fotos</h1>
-      <p class="page-subtitle">
-        Imágenes geolocalizadas de los vuelos. Haz clic para verlas situadas en el mapa.
-      </p>
+      <h1 class="page-title">Galería de fotografías</h1>
+      <p class="page-subtitle">Listado de imágenes con metadatos, coordenadas y vuelos asociados.</p>
     </div>
+
     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{% url 'upload_photo' %}" class="btn btn-primary">📤 Subir nueva foto</a>
       <a href="{% url 'map' %}" class="btn btn-secondary">🗺️ Ver en mapa</a>
-      <a href="{% url 'upload_photo' %}" class="btn btn-primary">➕ Subir foto</a>
     </div>
   </div>
 
-  <!-- Barra de filtros sencilla -->
-  <form method="get" class="photo-toolbar">
-    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
-      <label style="font-size:0.8rem; color:#9ca3af;">Filtrar por vuelo:</label>
-      <select name="flight" onchange="this.form.submit()">
-        <option value="">Todos los vuelos</option>
-        {% if flights %}
-          {% for f in flights %}
-            <option value="{{ f.id }}"
-              {% if request.GET.flight|default:'' == f.id|stringformat:"s" %}selected{% endif %}>
-              {{ f.name }}{% if f.date %} ({{ f.date }}){% endif %}
-            </option>
-          {% endfor %}
-        {% endif %}
-      </select>
-    </div>
-
-    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center; margin-left:auto;">
-      <input type="search"
-             name="q"
-             value="{{ request.GET.q }}"
-             placeholder="Buscar en notas o vuelo…">
-      <button class="btn btn-outline" type="submit">🔍 Buscar</button>
-    </div>
-  </form>
-
   {% if photos %}
-    <div class="photo-grid">
+    <div class="gallery-grid">
       {% for photo in photos %}
         <article class="photo-card">
-          <a href="{% url 'map' %}?photo={{ photo.id }}"
-             class="photo-thumb-wrapper">
-            {% if photo.image %}
-              <img src="{{ photo.image.url }}" alt="Foto {{ photo.id }}">
-            {% else %}
-              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:0.8rem;">
-                Sin imagen
-              </div>
-            {% endif %}
-            <span class="photo-badge">
-              Foto #{{ photo.id }}
-              {% if photo.date %}
-                · {{ photo.date }}
-              {% endif %}
-            </span>
-          </a>
+
+          {% if photo.image %}
+            <img src="{{ photo.image.url }}" alt="Foto {{ photo.id }}">
+          {% else %}
+            <div style="height:190px; background:#111827; display:flex; align-items:center; justify-content:center; color:#9ca3af;">
+              Sin imagen
+            </div>
+          {% endif %}
 
           <div class="photo-body">
-            <div class="photo-title">
-              <div class="photo-title-main">
-                {% if photo.flight %}
-                  {{ photo.flight.name }}
-                {% else %}
-                  Foto sin vuelo
-                {% endif %}
-              </div>
-              <span class="photo-title-id">ID: {{ photo.id }}</span>
-            </div>
-
-            <div class="photo-meta">
-              {% if photo.lat and photo.lon %}
-                <span>📍 {{ photo.lat|floatformat:5 }}, {{ photo.lon|floatformat:5 }}</span>
-              {% endif %}
-              {% if photo.flight and photo.flight.drone_model %}
-                <span>🛩️ {{ photo.flight.drone_model }}</span>
-              {% endif %}
-              {% if photo.flight and photo.flight.date %}
-                <span class="chip">Vuelo {{ photo.flight.date }}</span>
-              {% endif %}
-            </div>
-
-            {% if photo.notes %}
-              <p class="photo-notes">
-                {{ photo.notes|truncatechars:120 }}
-              </p>
+            {% if photo.flight %}
+              <span class="chip">🛩️ {{ photo.flight.name }}</span>
             {% endif %}
 
-            <div class="photo-actions">
-              <a href="{% url 'map' %}?photo={{ photo.id }}"
-                 class="btn btn-outline">
-                📌 Ver en mapa
-              </a>
-              {% if photo.flight %}
-                <a href="{% url 'map' %}?flight={{ photo.flight.id }}"
-                   class="btn btn-secondary">
-                  🗺️ Ver vuelo completo
-                </a>
-              {% endif %}
-            </div>
+            {% if photo.lat and photo.lon %}
+              <span>📍 {{ photo.lat }}, {{ photo.lon }}</span>
+            {% endif %}
+
+            {% if photo.date %}
+              <span>📅 {{ photo.date }}</span>
+            {% endif %}
+
+            {% if photo.notes %}
+              <span>📝 {{ photo.notes|truncatechars:100 }}</span>
+            {% endif %}
           </div>
+
+          <div class="photo-actions">
+            <a href="{% url 'edit_photo' photo.id %}" class="btn btn-secondary">✏️ Editar</a>
+            <a href="{% url 'delete_photo' photo.id %}" class="btn btn-danger">🗑️ Borrar</a>
+          </div>
+
         </article>
       {% endfor %}
     </div>
+
   {% else %}
-    <div class="empty-state">
-      <h3>No hay fotos registradas</h3>
-      <p>Sube tus primeras imágenes con <strong>“Subir foto”</strong> para visualizarlas aquí.</p>
-    </div>
+    <p style="margin-top:2rem; text-align:center; color:#9ca3af;">
+      No hay fotos registradas todavía.
+    </p>
   {% endif %}
+
 </section>
 {% endblock %}

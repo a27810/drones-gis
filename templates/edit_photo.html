@@ -136,7 +136,6 @@
     margin-left: 2px;
   }
 
-  /* Estilos genéricos para inputs del formulario */
   form input,
   form select,
   form textarea {
@@ -274,15 +273,16 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Fecha (opcional)</label>
-          {{ form.date }}
-          {% if form.date.help_text %}
-            <p class="form-help">{{ form.date.help_text }}</p>
+          <label class="form-label">Fecha / hora de toma (opcional)</label>
+          {{ form.taken_at }}
+          {% if form.taken_at.help_text %}
+            <p class="form-help">{{ form.taken_at.help_text }}</p>
           {% endif %}
-          {% for error in form.date.errors %}
+          {% for error in form.taken_at.errors %}
             <p class="field-error">{{ error }}</p>
           {% endfor %}
         </div>
+
 
         <div class="form-footer">
           <a href="{% url 'photo_list' %}" class="btn btn-outline">
@@ -316,8 +316,8 @@
         {% if photo.lat and photo.lon %}
           <span>📍 {{ photo.lat }}, {{ photo.lon }}</span>
         {% endif %}
-        {% if photo.date %}
-          <span>📅 {{ photo.date }}</span>
+        {% if photo.taken_at %}
+          <span>📅 {{ photo.taken_at }}</span>
         {% endif %}
         {% if photo.notes %}
           <span>📝 {{ photo.notes|truncatechars:120 }}</span>
@@ -329,7 +329,6 @@
           🗺️ Centrarse en el mapa
         </a>
 
-        {# Si tu vista delete_photo es por GET, este enlace funcionará tal cual #}
         <a href="{% url 'delete_photo' photo.id %}" class="btn btn-danger">
           🗑️ Eliminar foto
         </a>

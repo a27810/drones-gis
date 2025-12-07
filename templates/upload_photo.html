@@ -1,62 +1,281 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Subir foto de dron</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 720px; margin: auto;}
-    form div {margin-bottom: 12px;}
-    label {display:block; font-weight:600; margin-bottom:4px;}
-    input, textarea, select {width:100%; padding:8px;}
-    .hint {font-size: .9em; color:#666;}
-    .actions {display:flex; gap:10px; align-items:center;}
-    a.btn {padding:8px 12px; border-radius:6px; text-decoration:none; border:1px solid #222; color:#222;}
-    button {padding:8px 12px; border-radius:6px; background:#111;color:#fff; border:0;}
-  </style>
-</head>
-<body>
-  <h1>Subir fotografía aérea</h1>
-  <p class="hint">Si la imagen tiene EXIF, se detectarán coordenadas automáticamente. Si no, indica lat/lon.</p>
+{% extends "base.html" %}
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div><label>Vuelo (opcional)</label>{{ form.flight }}</div>
-    <div><label>Imagen</label>{{ form.image }}</div>
-    <div><label>Fecha/hora (opcional)</label>{{ form.taken_at }}</div>
-    <div><label>Notas (opcional)</label>{{ form.notes }}</div>
-    <div><label>Latitud (si no hay EXIF)</label>{{ form.lat }}</div>
-    <div><label>Longitud (si no hay EXIF)</label>{{ form.lon }}</div>
-    <div class="actions">
-      <button type="submit">Guardar</button>
-      <a class="btn" href="{% url 'home' %}">Volver al mapa</a>
-    </div>
-  </form>
-  <script src="https://unpkg.com/exifr/dist/full.umd.js"></script>
-<script>
-  const fileInput = document.getElementById('id_image');
-  const latInput  = document.getElementById('id_lat');
-  const lonInput  = document.getElementById('id_lon');
+{% block title %}Subir nueva fotografía – Drones GIS{% endblock %}
 
-  async function fillGpsFromExif(file) {
-    try {
-      const exif = await exifr.gps(file); // {latitude, longitude} o null
-      if (exif && typeof exif.latitude === 'number' && typeof exif.longitude === 'number') {
-        latInput.value = exif.latitude.toFixed(6);
-        lonInput.value = exif.longitude.toFixed(6);
-      }
-    } catch(e) {
-      console.debug('EXIF GPS no legible en cliente', e);
+{% block extra_css %}
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    background: #020617;
+    color: #e5e7eb;
+  }
+
+  .btn-primary {
+    background: #10b981;
+    border-color: #10b981;
+    color: #020617;
+    font-weight: 500;
+  }
+
+  .btn-secondary {
+    border-color: #374151;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border-color: #4b5563;
+  }
+
+  .btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .form-card {
+    background: #020617;
+    border-radius: 18px;
+    border: 1px solid #111827;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    padding: 1.3rem 1.5rem;
+    max-width: 720px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 1.2rem;
+  }
+
+  @media (max-width: 900px) {
+    .form-grid {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
-  if (fileInput) {
-    fileInput.addEventListener('change', (ev) => {
-      const file = ev.target.files?.[0];
-      if (file) fillGpsFromExif(file);
-    });
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
   }
-</script>
 
-</body>
-</html>
+  .form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .form-help {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .field-error {
+    color: #f97373;
+    font-size: 0.75rem;
+  }
+
+  form input,
+  form select,
+  form textarea {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  form input[type="file"] {
+    padding: 0.35rem 0.6rem;
+  }
+
+  form input:focus,
+  form select:focus,
+  form textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 1px rgba(16,185,129,0.4);
+  }
+
+  textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+
+  .preview-mini {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #111827;
+    background: #020617;
+    max-height: 220px;
+  }
+
+  .preview-mini img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .preview-meta {
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .preview-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Subir nueva fotografía</h1>
+      <p class="page-subtitle">
+        Añade una imagen geolocalizada y asígnala a un vuelo para visualizarla en el mapa GIS.
+      </p>
+    </div>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{% url 'photo_list' %}" class="btn btn-secondary">📷 Volver a la galería</a>
+      <a href="{% url 'map' %}" class="btn btn-outline">🗺️ Ir al mapa</a>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="field-error" style="margin-bottom:0.8rem;">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="form-grid">
+        <!-- Columna izquierda: campos principales -->
+        <div>
+          <div class="form-group">
+            <label class="form-label">Imagen</label>
+            {{ form.image }}
+            <p class="form-help">
+              Formatos recomendados: JPG, PNG. Tamaño moderado para no sobrecargar el visor.
+            </p>
+            {% for error in form.image.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vuelo asociado (opcional)</label>
+            {{ form.flight }}
+            <p class="form-help">
+              Si asignas un vuelo, la foto aparecerá ligada a su ruta en el mapa.
+            </p>
+            {% for error in form.flight.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notas / descripción</label>
+            {{ form.notes }}
+            <p class="form-help">
+              Por ejemplo: tipo de misión, condiciones de luz, objetivo de la toma, etc.
+            </p>
+            {% for error in form.notes.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Columna derecha: coords / fecha / preview simple -->
+        <div>
+          <div class="form-group">
+            <label class="form-label">Latitud</label>
+            {{ form.lat }}
+            {% for error in form.lat.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Longitud</label>
+            {{ form.lon }}
+            {% for error in form.lon.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fecha / hora de toma (opcional)</label>
+            {{ form.taken_at }}
+            {% if form.taken_at.help_text %}
+              <p class="form-help">{{ form.taken_at.help_text }}</p>
+            {% endif %}
+            {% for error in form.taken_at.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          </div>
+
+
+          <div class="preview-meta">
+            <span>🧭 Asegúrate de que las coordenadas son correctas para que se sitúe bien en el mapa.</span>
+            <span>💾 Podrás editar estos datos más tarde desde la galería.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <a href="{% url 'photo_list' %}" class="btn btn-outline">
+          Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+          ⬆️ Subir fotografía
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

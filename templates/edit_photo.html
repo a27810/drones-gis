@@ -1,34 +1,339 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Editar fotografía</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 720px; margin: auto; background:#f5f5f5;}
-    h1 {margin-bottom: 10px;}
-    form p {margin-bottom: 10px;}
-    button {padding:8px 14px; border-radius:6px; border:0; background:#111; color:#fff; cursor:pointer;}
-    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; margin-left:10px; background:#fff;}
-    img.thumb {max-width:200px; max-height:150px; object-fit:cover; display:block; margin-bottom:10px;}
-  </style>
-</head>
-<body>
-  <h1>Editar fotografía #{{ photo.id }}</h1>
+{% extends "base.html" %}
 
-  {% if photo.image %}
+{% block title %}Editar fotografía – Drones GIS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    background: #020617;
+    color: #e5e7eb;
+  }
+
+  .btn-primary {
+    background: #10b981;
+    border-color: #10b981;
+    color: #020617;
+    font-weight: 500;
+  }
+
+  .btn-secondary {
+    border-color: #374151;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border-color: #4b5563;
+  }
+
+  .btn-danger {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: #f9fafb;
+  }
+
+  .btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 1.3rem;
+  }
+
+  @media (max-width: 900px) {
+    .layout-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .form-card,
+  .preview-card {
+    background: #020617;
+    border-radius: 18px;
+    border: 1px solid #111827;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    padding: 1.2rem 1.4rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .form-help {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .form-control,
+  .form-select,
+  textarea {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  .form-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+
+  .field-error {
+    color: #f97373;
+    font-size: 0.75rem;
+  }
+
+  .required-star {
+    color: #f97373;
+    margin-left: 2px;
+  }
+
+  form input,
+  form select,
+  form textarea {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  form input[type="file"] {
+    padding: 0.35rem 0.6rem;
+  }
+
+  form input:focus,
+  form select:focus,
+  form textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 1px rgba(16,185,129,0.4);
+  }
+
+  .preview-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .photo-preview {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #111827;
+    background: #020617;
+    max-height: 260px;
+  }
+
+  .photo-preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .preview-meta {
+    margin-top: 0.7rem;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .preview-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="page-header">
     <div>
-      <strong>Foto actual:</strong><br>
-      <img class="thumb" src="{{ photo.image.url }}" alt="Foto {{ photo.id }}">
+      <h1 class="page-title">
+        Editar fotografía #{{ photo.id }}
+      </h1>
+      <p class="page-subtitle">
+        Ajusta la información, coordenadas o vuelo asociado de la imagen seleccionada.
+      </p>
     </div>
-  {% endif %}
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{% url 'photo_list' %}" class="btn btn-secondary">📷 Volver a la galería</a>
+      <a href="{% url 'map' %}?photo={{ photo.id }}" class="btn btn-outline">🗺️ Ver en mapa</a>
+    </div>
+  </div>
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
+  <div class="layout-grid">
+    <!-- Columna izquierda: formulario -->
+    <div class="form-card">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
 
-    <button type="submit">Guardar cambios</button>
-    <a class="btn" href="{% url 'photo_list' %}">Volver al listado</a>
-  </form>
-</body>
-</html>
+        {% if form.non_field_errors %}
+          <div class="field-error" style="margin-bottom:0.8rem;">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">
+            Imagen
+          </label>
+          {{ form.image }}
+          <p class="form-help">
+            Si no eliges un nuevo archivo, se mantendrá la imagen actual.
+          </p>
+          {% for error in form.image.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vuelo asociado</label>
+          {{ form.flight }}
+          <p class="form-help">
+            Si asignas un vuelo, la foto aparecerá vinculada a él en el mapa.
+          </p>
+          {% for error in form.flight.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notas / descripción</label>
+          {{ form.notes }}
+          {% for error in form.notes.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Latitud</label>
+          {{ form.lat }}
+          {% for error in form.lat.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Longitud</label>
+          {{ form.lon }}
+          {% for error in form.lon.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Fecha / hora de toma (opcional)</label>
+          {{ form.taken_at }}
+          {% if form.taken_at.help_text %}
+            <p class="form-help">{{ form.taken_at.help_text }}</p>
+          {% endif %}
+          {% for error in form.taken_at.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+
+        <div class="form-footer">
+          <a href="{% url 'photo_list' %}" class="btn btn-outline">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-primary">
+            💾 Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Columna derecha: previsualización -->
+    <aside class="preview-card">
+      <h3>Previsualización</h3>
+
+      {% if photo.image %}
+        <div class="photo-preview">
+          <img src="{{ photo.image.url }}" alt="Foto #{{ photo.id }}">
+        </div>
+      {% else %}
+        <p class="form-help">
+          Esta fotografía no tiene imagen asociada todavía.
+        </p>
+      {% endif %}
+
+      <div class="preview-meta">
+        {% if photo.flight %}
+          <span>🛩️ Vuelo: <strong>{{ photo.flight.name }}</strong></span>
+        {% endif %}
+        {% if photo.lat and photo.lon %}
+          <span>📍 {{ photo.lat }}, {{ photo.lon }}</span>
+        {% endif %}
+        {% if photo.taken_at %}
+          <span>📅 {{ photo.taken_at }}</span>
+        {% endif %}
+        {% if photo.notes %}
+          <span>📝 {{ photo.notes|truncatechars:120 }}</span>
+        {% endif %}
+      </div>
+
+      <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <a href="{% url 'map' %}?photo={{ photo.id }}" class="btn btn-outline">
+          🗺️ Centrarse en el mapa
+        </a>
+
+        <a href="{% url 'delete_photo' photo.id %}" class="btn btn-danger">
+          🗑️ Eliminar foto
+        </a>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

@@ -1,29 +1,168 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Nuevo vuelo de dron</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {font-family: system-ui, Arial, sans-serif; padding: 20px; max-width: 640px; margin: auto; background:#f5f5f5;}
-    h1 {margin-bottom: 10px;}
-    form p {margin-bottom: 10px;}
-    label {font-weight:600;}
-    input, textarea {width:100%; padding:6px;}
-    button {padding:8px 14px; border-radius:6px; border:0; background:#111; color:#fff; cursor:pointer;}
-    a.btn {padding:8px 12px; border-radius:6px; border:1px solid #222; text-decoration:none; color:#222; margin-left:10px; background:#fff;}
-  </style>
-</head>
-<body>
-  <h1>Registrar nuevo vuelo</h1>
-  <p>Introduce los datos básicos del vuelo. Luego podrás asociar fotos a este vuelo desde el formulario de subida.</p>
+{% extends "base.html" %}
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+{% block title %}Nuevo vuelo – Drones GIS{% endblock %}
 
-    <button type="submit">Guardar vuelo</button>
-    <a href="{% url 'flight_list' %}" class="btn">Volver al listado</a>
-  </form>
-</body>
-</html>
+{% block extra_css %}
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    background: #020617;
+    color: #e5e7eb;
+  }
+
+  .btn-primary {
+    background: #10b981;
+    border-color: #10b981;
+    color: #020617;
+    font-weight: 500;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border-color: #4b5563;
+  }
+
+  .btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .form-card {
+    background: #020617;
+    border-radius: 18px;
+    border: 1px solid #111827;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    padding: 1.2rem 1.4rem;
+    max-width: 640px;
+  }
+
+  .form-description {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    margin-bottom: 0.9rem;
+  }
+
+  /* Estilos genéricos para campos del formulario */
+  form p {
+    margin-bottom: 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  form label {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+  }
+
+  form input,
+  form select,
+  form textarea {
+    width: 100%;
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  form textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  form input:focus,
+  form select:focus,
+  form textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 1px rgba(16,185,129,0.4);
+  }
+
+  .form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.1rem;
+    flex-wrap: wrap;
+  }
+
+  .field-error {
+    color: #f97373;
+    font-size: 0.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Registrar nuevo vuelo</h1>
+      <p class="page-subtitle">
+        Introduce los datos básicos del vuelo. Más adelante podrás asociar fotografías
+        y dibujar la ruta sobre el mapa.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'flight_list' %}" class="btn btn-outline">
+        ⬅ Volver al listado de vuelos
+      </a>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <p class="form-description">
+      Rellena al menos el nombre del vuelo y, si lo deseas, el lugar, fecha,
+      modelo de dron y alguna nota descriptiva.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="field-error" style="margin-bottom:0.8rem;">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {{ form.as_p }}
+
+      <div class="form-footer">
+        <a href="{% url 'flight_list' %}" class="btn btn-outline">
+          Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+          💾 Guardar vuelo
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from .models import Flight, Photo, Zone
 from .serializers import FlightSerializer, PhotoSerializer, ZoneSerializer
 from .forms import PhotoUploadForm, FlightForm
+from django.db.models import Q
 
 
 # -----------------------
@@ -36,7 +37,7 @@ class ZoneViewSet(viewsets.ModelViewSet):
 
 def home(request):
     """Pantalla de bienvenida."""
-    return render(request, 'welcome.html')
+    return render(request, 'home.html')
 
 
 def map_view(request):
@@ -85,16 +86,35 @@ def edit_photo(request, pk):
 
 def photo_list(request):
     """
-    Listado/paginación de todas las fotos.
+    Galería de fotos con filtro por vuelo y búsqueda por texto.
     """
-    photos_qs = Photo.objects.all().order_by('-taken_at', '-id')
-    paginator = Paginator(photos_qs, 10)  # 10 por página
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Ordenamos por fecha de toma (si la hay) y luego por id
+    photos = Photo.objects.select_related('flight').order_by('-taken_at', '-id')
 
-    return render(request, 'photos_list.html', {
-        'page_obj': page_obj,
-    })
+    # Filtro por vuelo
+    selected_flight_id = request.GET.get('flight') or ""
+    if selected_flight_id:
+        photos = photos.filter(flight_id=selected_flight_id)
+
+    # Búsqueda por texto (en notas o nombre de vuelo)
+    search_text = request.GET.get('q') or ""
+    if search_text:
+        photos = photos.filter(
+            Q(notes__icontains=search_text) |
+            Q(flight__name__icontains=search_text)
+        )
+
+    flights = Flight.objects.all().order_by('-date', 'id')
+
+    context = {
+        "photos": photos,
+        "flights": flights,
+        "selected_flight_id": selected_flight_id,
+        "search_text": search_text,
+    }
+    return render(request, "photos_list.html", context)
+
+
 
 
 def delete_photo(request, photo_id):
@@ -283,8 +303,14 @@ def export_photos_geojson(request):
     return response
 
 def edit_flight_path(request, flight_id):
-    """Editor visual de rutas con Leaflet."""
     flight = get_object_or_404(Flight, id=flight_id)
+
+    if request.method == "POST":
+        path_geojson = request.POST.get("path_geojson") or ""
+        flight.path_geojson = path_geojson or None
+        flight.save()
+        return redirect("flight_list")
+
     return render(request, "edit_flight_path.html", {"flight": flight})
 
 

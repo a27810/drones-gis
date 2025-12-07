@@ -1,262 +1,157 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Galería de fotos – Drones GIS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, Arial, sans-serif;
-      background: #f3f4f6;
-    }
-    header {
-      background: #111827;
-      color: #e5e7eb;
-      padding: 10px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-    header .left {
-      display: flex;
-      flex-direction: column;
-    }
-    header .title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    header .subtitle {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-    header .right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    a.btn-link {
-      text-decoration: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
-      color: #e5e7eb;
-      font-size: 0.8rem;
-      background: transparent;
-    }
-    a.btn-primary {
-      background: #10b981;
-      border-color: #10b981;
-      color: #111827;
-    }
+{% block title %}Galería de fotografías – Drones GIS{% endblock %}
 
-    main {
-      padding: 16px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      font-size: 0.9rem;
-    }
-    th, td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #e5e7eb;
-      vertical-align: middle;
-    }
-    th {
-      background: #f9fafb;
-      text-align: left;
-      font-weight: 600;
-      font-size: 0.8rem;
-      color: #4b5563;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    img.thumb {
-      max-width: 120px;
-      max-height: 80px;
-      display: block;
-      border-radius: 4px;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .btn-sm {
-      font-size: 0.75rem;
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid #d1d5db;
-      text-decoration: none;
-      background: #f9fafb;
-      color: #111827;
-      cursor: pointer;
-    }
-    .btn-sm.primary {
-      background: #3b82f6;
-      border-color: #3b82f6;
-      color: white;
-    }
-    .btn-sm.danger {
-      background: #ef4444;
-      border-color: #ef4444;
-      color: white;
-    }
-    .pagination {
-      margin-top: 12px;
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      font-size: 0.85rem;
-      align-items: center;
-    }
-    .pagination a {
-      text-decoration: none;
-      padding: 3px 7px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      color: #111827;
-      background: white;
-    }
-    .pagination span.current {
-      padding: 3px 7px;
-      border-radius: 4px;
-      background: #111827;
-      color: #f9fafb;
-      border: 1px solid #111827;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="left">
-      <div class="title">Galería de fotografías</div>
-      <div class="subtitle">Listado paginado de fotos geolocalizadas</div>
+{% block extra_css %}
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    background: #020617;
+    color: #e5e7eb;
+  }
+
+  .btn-outline { border-color:#4b5563; background:transparent; }
+  .btn-secondary { border-color:#374151; }
+  .btn-primary { background:#10b981; border-color:#10b981; color:#020617; }
+  .btn-danger { background:#b91c1c; border-color:#b91c1c; color:#f9fafb; }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .photo-card {
+    background: #020617;
+    border-radius: 18px;
+    border: 1px solid #111827;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .photo-card img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+  }
+
+  .photo-body {
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    color: #e5e7eb;
+    font-size: 0.85rem;
+  }
+
+  .photo-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.8rem 1.1rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid #4b5563;
+    color: #9ca3af;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Galería de fotografías</h1>
+      <p class="page-subtitle">Listado de imágenes con metadatos, coordenadas y vuelos asociados.</p>
     </div>
-    <div class="right">
-      <a href="{% url 'home' %}" class="btn-link">Inicio</a>
-      <a href="{% url 'map' %}" class="btn-link">Mapa 2D</a>
-      <a href="{% url 'map3d_view' %}" class="btn-link">Mapa 3D</a>
-      <a href="{% url 'upload_photo' %}" class="btn-link btn-primary">+ Subir foto</a>
+
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{% url 'upload_photo' %}" class="btn btn-primary">📤 Subir nueva foto</a>
+      <a href="{% url 'map' %}" class="btn btn-secondary">🗺️ Ver en mapa</a>
     </div>
-  </header>
+  </div>
 
-  <main>
-    {% if messages %}
-      <ul>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
+  {% if photos %}
+    <div class="gallery-grid">
+      {% for photo in photos %}
+        <article class="photo-card">
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Miniatura</th>
-          <th>Fecha</th>
-          <th>Coordenadas</th>
-          <th>Notas</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for photo in page_obj %}
-          <tr>
-            <td>{{ photo.id }}</td>
-            <td>
-              {% if photo.image %}
-                <img src="{{ photo.image.url }}" alt="Foto {{ photo.id }}" class="thumb">
-              {% else %}
-                —
-              {% endif %}
-            </td>
-            <td>
-              {% if photo.taken_at %}
-                {{ photo.taken_at }}
-              {% else %}
-                —
-              {% endif %}
-            </td>
-            <td>
-              Lat: {{ photo.lat }}<br>
-              Lon: {{ photo.lon }}
-            </td>
-            <td>
-              {{ photo.notes|default:"" }}
-            </td>
-            <td>
-              <div class="actions">
-                <!-- Ver en mapa (centrar en esta foto) -->
-                {% if photo.id %}
-                  <a
-                    class="btn-sm primary"
-                    href="/map/?photo={{ photo.id }}"
-                  >
-                    Ver en mapa
-                  </a>
-                {% endif %}
+          {% if photo.image %}
+            <img src="{{ photo.image.url }}" alt="Foto {{ photo.id }}">
+          {% else %}
+            <div style="height:190px; background:#111827; display:flex; align-items:center; justify-content:center; color:#9ca3af;">
+              Sin imagen
+            </div>
+          {% endif %}
 
-                <!-- Editar -->
-                {% if photo.id %}
-                  <a
-                    class="btn-sm"
-                    href="{% url 'edit_photo' photo.id %}"
-                  >
-                    Editar
-                  </a>
-                {% endif %}
+          <div class="photo-body">
+            {% if photo.flight %}
+              <span class="chip">🛩️ {{ photo.flight.name }}</span>
+            {% endif %}
 
-                <!-- Eliminar (POST con confirmación) -->
-                {% if photo.id %}
-                  <form
-                    method="post"
-                    action="{% url 'delete_photo' photo.id %}"
-                    style="display:inline;"
-                    onsubmit="return confirm('¿Seguro que quieres eliminar esta foto? Esta acción no se puede deshacer.');"
-                  >
-                    {% csrf_token %}
-                    <button type="submit" class="btn-sm danger">
-                      Eliminar
-                    </button>
-                  </form>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6">No hay fotos todavía.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            {% if photo.lat and photo.lon %}
+              <span>📍 {{ photo.lat }}, {{ photo.lon }}</span>
+            {% endif %}
 
-    <!-- Paginación -->
-    <div class="pagination">
-      {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
-      {% endif %}
+            {% if photo.date %}
+              <span>📅 {{ photo.date }}</span>
+            {% endif %}
 
-      <span class="current">
-        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-      </span>
+            {% if photo.notes %}
+              <span>📝 {{ photo.notes|truncatechars:100 }}</span>
+            {% endif %}
+          </div>
 
-      {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">Siguiente &raquo;</a>
-      {% endif %}
+          <div class="photo-actions">
+            <a href="{% url 'edit_photo' photo.id %}" class="btn btn-secondary">✏️ Editar</a>
+            <a href="{% url 'delete_photo' photo.id %}" class="btn btn-danger">🗑️ Borrar</a>
+          </div>
+
+        </article>
+      {% endfor %}
     </div>
-  </main>
-</body>
-</html>
+
+  {% else %}
+    <p style="margin-top:2rem; text-align:center; color:#9ca3af;">
+      No hay fotos registradas todavía.
+    </p>
+  {% endif %}
+
+</section>
+{% endblock %}

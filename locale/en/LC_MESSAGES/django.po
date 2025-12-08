@@ -1,0 +1,373 @@
+# English translations for Drones GIS project.
+msgid ""
+msgstr ""
+"Project-Id-Version: Drones GIS 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-08 16:39+0100\n"
+"PO-Revision-Date: 2025-12-08 16:30+0100\n"
+"Last-Translator: Gustavo <you@example.com>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\templates\edit_photo.html:4
+#, fuzzy
+#| msgid "Inicio – Drones GIS"
+msgid "Editar fotografía – Drones GIS"
+msgstr "Home – Drones GIS"
+
+#: .\templates\edit_photo.html:66
+#, python-format
+msgid "Editar fotografía #%(photo.id)s"
+msgstr ""
+
+#: .\templates\edit_photo.html:69
+msgid ""
+"Ajusta la información, coordenadas o vuelo asociado de la imagen "
+"seleccionada."
+msgstr ""
+
+#: .\templates\edit_photo.html:73 .\templates\upload_photo.html:167
+msgid "Volver a la galería"
+msgstr ""
+
+#: .\templates\edit_photo.html:74
+msgid "Ver en mapa"
+msgstr ""
+
+#: .\templates\edit_photo.html:92 .\templates\upload_photo.html:186
+msgid "Imagen"
+msgstr ""
+
+#: .\templates\edit_photo.html:96
+msgid "Si no eliges un nuevo archivo, se mantendrá la imagen actual."
+msgstr ""
+
+#: .\templates\edit_photo.html:104
+msgid "Vuelo asociado"
+msgstr ""
+
+#: .\templates\edit_photo.html:107
+msgid "Si asignas un vuelo, la foto aparecerá vinculada a él en el mapa."
+msgstr ""
+
+#: .\templates\edit_photo.html:115 .\templates\upload_photo.html:208
+#, fuzzy
+#| msgid "Datos de demostración"
+msgid "Notas / descripción"
+msgstr "Sample data"
+
+#: .\templates\edit_photo.html:123 .\templates\upload_photo.html:222
+msgid "Latitud"
+msgstr ""
+
+#: .\templates\edit_photo.html:131 .\templates\upload_photo.html:230
+msgid "Longitud"
+msgstr ""
+
+#: .\templates\edit_photo.html:139
+msgid "Fecha (opcional)"
+msgstr ""
+
+#: .\templates\edit_photo.html:151 .\templates\upload_photo.html:257
+msgid "Cancelar"
+msgstr ""
+
+#: .\templates\edit_photo.html:154
+msgid "Guardar cambios"
+msgstr ""
+
+#: .\templates\edit_photo.html:162
+msgid "Previsualización"
+msgstr ""
+
+#: .\templates\edit_photo.html:166
+#, python-format
+msgid "Foto #%(photo.id)s"
+msgstr ""
+
+#: .\templates\edit_photo.html:170
+msgid "Esta fotografía no tiene imagen asociada todavía."
+msgstr ""
+
+#: .\templates\edit_photo.html:176
+#, python-format
+msgid "Vuelo: <strong>%(photo.flight.name)s</strong>"
+msgstr ""
+
+#: .\templates\edit_photo.html:191
+msgid "Centrarse en el mapa"
+msgstr ""
+
+#: .\templates\edit_photo.html:194
+msgid "Eliminar foto"
+msgstr ""
+
+#: .\templates\flight_form.html:5
+msgid "Nuevo vuelo de dron"
+msgstr ""
+
+#: .\templates\flight_form.html:18
+msgid "Registrar nuevo vuelo"
+msgstr ""
+
+#: .\templates\flight_form.html:20
+msgid ""
+"Introduce los datos básicos del vuelo. Luego podrás asociar fotos a este "
+"vuelo desde el formulario de subida."
+msgstr ""
+
+#: .\templates\flight_form.html:27
+#, fuzzy
+#| msgid "Gestionar vuelos"
+msgid "Guardar vuelo"
+msgstr "Manage flights"
+
+#: .\templates\flight_form.html:28
+msgid "Volver al listado"
+msgstr ""
+
+#: .\templates\home.html:4
+msgid "Inicio – Drones GIS"
+msgstr "Home – Drones GIS"
+
+#: .\templates\home.html:206
+msgid "Panel GIS para operaciones con drones"
+msgstr "GIS panel for drone operations"
+
+#: .\templates\home.html:210
+msgid "Controla tus"
+msgstr "Monitor your"
+
+#: .\templates\home.html:210
+msgid "vuelos y fotografías"
+msgstr "flights and photographs"
+
+#: .\templates\home.html:211
+msgid "sobre zonas UAS críticas."
+msgstr "over critical UAS zones."
+
+#: .\templates\home.html:215
+msgid ""
+"\n"
+"        Visualiza vuelos, fotos geolocalizadas y zonas de restricción en un "
+"visor GIS\n"
+"        sencillo. Este panel está pensado para demostrar, en un contexto "
+"académico,\n"
+"        cómo integrar <strong>mapas, datos y normativa UAS</strong> en una "
+"sola aplicación web.\n"
+"        "
+msgstr ""
+"\n"
+"        Visualise flights, geolocated photos and restricted zones in a "
+"simple GIS viewer.\n"
+"        This panel is designed to demonstrate, in an academic context,\n"
+"        how to integrate <strong>maps, data and UAS regulations</strong> in "
+"a single web application.\n"
+"        "
+
+#: .\templates\home.html:224
+msgid "Ver mapa operativo"
+msgstr "Open operational map"
+
+#: .\templates\home.html:227
+msgid "Gestionar vuelos"
+msgstr "Manage flights"
+
+#: .\templates\home.html:232
+msgid "📍 Fotos con coordenadas GPS"
+msgstr "📍 Photos with GPS coordinates"
+
+#: .\templates\home.html:233
+msgid "🛰️ Capas GeoJSON de zonas UAS"
+msgstr "🛰️ GeoJSON layers of UAS zones"
+
+#: .\templates\home.html:234
+msgid "✈️ Rutas de vuelo (LineString)"
+msgstr "✈️ Flight routes (LineString)"
+
+#: .\templates\home.html:235
+msgid "🔥 Mapa de calor de fotografías"
+msgstr "🔥 Photo heatmap"
+
+#: .\templates\home.html:243
+msgid "Flujo básico de trabajo"
+msgstr "Basic workflow"
+
+#: .\templates\home.html:246
+msgid ""
+"\n"
+"          Crea un vuelo, sube fotografías con metadatos GPS o coordenadas "
+"manuales\n"
+"          y visualiza todo sobre el mapa. Incluye exportación GeoJSON para "
+"reutilizar\n"
+"          los datos en otros sistemas GIS.\n"
+"          "
+msgstr ""
+"\n"
+"          Create a flight, upload photos with GPS metadata or manual "
+"coordinates\n"
+"          and visualise everything on the map. GeoJSON export is included so "
+"you can reuse\n"
+"          the data in other GIS systems.\n"
+"          "
+
+#: .\templates\home.html:253
+msgid "Export GeoJSON"
+msgstr "Export GeoJSON"
+
+#: .\templates\home.html:254
+msgid "API REST con Django + DRF"
+msgstr "REST API with Django + DRF"
+
+#: .\templates\home.html:260
+msgid "Capas de zonas UAS de ejemplo"
+msgstr "Example UAS zones layers"
+
+#: .\templates\home.html:263
+msgid ""
+"\n"
+"          El visor incluye una capa de <strong>zonas de exclusión simuladas</"
+"strong>\n"
+"          (aeropuertos, áreas militares, etc.), cargadas como GeoJSON, para "
+"mostrar\n"
+"          cómo se integrarían datos oficiales de un proveedor como ENAIRE.\n"
+"          "
+msgstr ""
+"\n"
+"          The viewer includes a layer of <strong>simulated exclusion zones</"
+"strong>\n"
+"          (airports, military areas, etc.) loaded as GeoJSON, to show how\n"
+"          official data from a provider such as ENAIRE could be integrated.\n"
+"          "
+
+#: .\templates\home.html:270
+msgid "Capa \\"
+msgstr "UAS zones layer"
+
+#: .\templates\home.html:271
+msgid "Datos de demostración"
+msgstr "Sample data"
+
+#: .\templates\home.html:277
+msgid "Enfoque académico"
+msgstr "Academic focus"
+
+#: .\templates\home.html:280
+msgid ""
+"\n"
+"          Esta plataforma forma parte del TFG del CFGS de Desarrollo de "
+"Aplicaciones Web.\n"
+"          El objetivo es demostrar arquitectura web, buenas práticas y uso "
+"de\n"
+"          tecnologías GIS, no reemplazar herramientas de planificación "
+"reales.\n"
+"          "
+msgstr ""
+"\n"
+"          This platform is part of the final project for the Advanced "
+"Vocational Training in\n"
+"          Web Application Development. Its goal is to demonstrate web "
+"architecture,\n"
+"          best practices and the use of GIS technologies, not to replace "
+"real\n"
+"          operational planning tools.\n"
+"          "
+
+#: .\templates\home.html:287
+msgid "Proyecto TFG"
+msgstr "Final project"
+
+#: .\templates\home.html:288
+msgid "San Valero · DAW"
+msgstr "San Valero · DAW"
+
+#: .\templates\map.html:4
+msgid "Mapa GIS – Drones GIS"
+msgstr "GIS map – Drones GIS"
+
+#: .\templates\map.html:158
+msgid "Vuelo:"
+msgstr "Flight:"
+
+#: .\templates\map.html:160
+msgid "Inicio"
+msgstr "Home"
+
+#: .\templates\map.html:161
+msgid "Galería"
+msgstr "Gallery"
+
+#: .\templates\map.html:162
+msgid "Mapa 3D"
+msgstr "3D map"
+
+#: .\templates\map.html:163
+msgid "Exportar GeoJSON"
+msgstr "Export GeoJSON"
+
+#: .\templates\map.html:165
+msgid "+ Subir foto"
+msgstr "+ Upload photo"
+
+#: .\templates\upload_photo.html:4
+msgid "Subir nueva fotografía – Drones GIS"
+msgstr ""
+
+#: .\templates\upload_photo.html:161
+#, fuzzy
+#| msgid "vuelos y fotografías"
+msgid "Subir nueva fotografía"
+msgstr "flights and photographs"
+
+#: .\templates\upload_photo.html:163
+msgid ""
+"Añade una imagen geolocalizada y asígnala a un vuelo para visualizarla en el "
+"mapa GIS."
+msgstr ""
+
+#: .\templates\upload_photo.html:168
+msgid "Ir al mapa"
+msgstr ""
+
+#: .\templates\upload_photo.html:189
+msgid ""
+"Formatos recomendados: JPG, PNG. Tamaño moderado para no sobrecargar el "
+"visor."
+msgstr ""
+
+#: .\templates\upload_photo.html:197
+msgid "Vuelo asociado (opcional)"
+msgstr ""
+
+#: .\templates\upload_photo.html:200
+msgid "Si asignas un vuelo, la foto aparecerá ligada a su ruta en el mapa."
+msgstr ""
+
+#: .\templates\upload_photo.html:211
+msgid ""
+"Por ejemplo: tipo de misión, condiciones de luz, objetivo de la toma, etc."
+msgstr ""
+
+#: .\templates\upload_photo.html:238
+msgid "Fecha / hora de toma (opcional)"
+msgstr ""
+
+#: .\templates\upload_photo.html:249
+msgid ""
+"Asegúrate de que las coordenadas son correctas para que se sitúe bien en el "
+"mapa."
+msgstr ""
+
+#: .\templates\upload_photo.html:250
+msgid "Podrás editar estos datos más tarde desde la galería."
+msgstr ""
+
+#: .\templates\upload_photo.html:260
+#, fuzzy
+#| msgid "+ Subir foto"
+msgid "Subir fotografía"
+msgstr "+ Upload photo"

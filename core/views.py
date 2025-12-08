@@ -9,7 +9,7 @@ from rest_framework import viewsets
 from .models import Flight, Photo, Zone
 from .serializers import FlightSerializer, PhotoSerializer, ZoneSerializer
 from .forms import PhotoUploadForm, FlightForm
-from django.db.models import Q
+from django.db.models import Q, Count
 
 
 # -----------------------
@@ -133,12 +133,31 @@ def delete_photo(request, photo_id):
 
 def flight_list(request):
     """
-    Listado simple de vuelos.
+    Listado de vuelos con búsqueda sencilla por nombre y modelo de dron.
+    Además, añade el número de fotos asociadas a cada vuelo (photo_count).
     """
-    flights = Flight.objects.all().order_by('-date', 'id')
-    return render(request, 'flights_list.html', {
-        'flights': flights,
-    })
+    q = (request.GET.get("q") or "").strip()
+
+    # Base queryset
+    flights = Flight.objects.all()
+
+    # Filtro de búsqueda (muy sencillo)
+    if q:
+        flights = flights.filter(
+            Q(name__icontains=q) |
+            Q(drone_model__icontains=q)
+        )
+
+    # Anotamos nº de fotos asociadas
+    flights = flights.annotate(
+        photo_count=Count("photos")
+    ).order_by("-date", "id")
+
+    context = {
+        "flights": flights,
+        "q": q,
+    }
+    return render(request, "flights_list.html", context)
 
 
 def flight_create(request):
@@ -303,15 +322,42 @@ def export_photos_geojson(request):
     return response
 
 def edit_flight_path(request, flight_id):
+    """
+    Vista para dibujar/editar la ruta de un vuelo en Leaflet.
+    Guarda la ruta como GeoJSON (LineString) en Flight.path_geojson.
+    """
     flight = get_object_or_404(Flight, id=flight_id)
 
     if request.method == "POST":
-        path_geojson = request.POST.get("path_geojson") or ""
-        flight.path_geojson = path_geojson or None
-        flight.save()
-        return redirect("flight_list")
+        raw_geojson = request.POST.get("path_geojson", "").strip()
 
-    return render(request, "edit_flight_path.html", {"flight": flight})
+        if raw_geojson:
+            try:
+                geojson_obj = json.loads(raw_geojson)
+            except json.JSONDecodeError:
+                geojson_obj = None
+                messages.error(request, "El GeoJSON recibido no es válido.")
+            else:
+                # Guardamos tal cual el objeto (normalmente un geometry LineString)
+                flight.path_geojson = geojson_obj
+                flight.save()
+                messages.success(request, "Ruta del vuelo guardada correctamente.")
+                return redirect("flight_list")
+        else:
+            # Si no se ha enviado nada, interpretamos como “sin ruta”
+            flight.path_geojson = None
+            flight.save()
+            messages.success(request, "Ruta eliminada. El vuelo queda sin ruta.")
+            return redirect("flight_list")
+
+    # GET: preparamos el GeoJSON existente (si lo hay) para pintarlo en el mapa
+    existing_geojson = flight.path_geojson or None
+    initial_geojson_str = json.dumps(existing_geojson) if existing_geojson else "null"
+
+    return render(request, "edit_flight_path.html", {
+        "flight": flight,
+        "initial_geojson": initial_geojson_str,
+    })
 
 
 def api_save_flight_path(request, flight_id):

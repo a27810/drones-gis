@@ -200,11 +200,19 @@
   <!-- Barra sencilla de búsqueda (opcional, aunque la vista no filtre aún) -->
   <form method="get" class="flight-toolbar">
     <input type="search"
-           name="q"
-           value="{{ request.GET.q }}"
-           placeholder="Buscar por nombre, lugar o modelo de dron…">
+          name="q"
+          value="{{ q }}"
+          placeholder="Buscar por nombre o modelo de dron…">
     <button class="btn btn-outline" type="submit">🔍 Buscar</button>
   </form>
+
+  {% if q %}
+  <p style="font-size:0.8rem; color:#9ca3af; margin:0 0 0.8rem 0;">
+    Mostrando resultados para: <strong>{{ q }}</strong>
+  </p>
+  {% endif %}
+
+
 
   {% if flights %}
     <div class="flight-list">
@@ -257,12 +265,13 @@
               <span>📏 Distancia estimada</span>
               <span>
                 {% if flight.distance_km %}
-                  {{ flight.distance_km }} km
+                  {{ flight.distance_km|floatformat:2 }} km
                 {% else %}
                   —
                 {% endif %}
               </span>
             </div>
+
             <div class="flight-stats-row">
               <span>🖼️ Nº de fotos</span>
               <span>

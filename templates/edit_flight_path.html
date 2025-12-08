@@ -1,312 +1,285 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Editar ruta de vuelo – Drones GIS{% endblock %}
 
 {% block extra_css %}
-<!-- Leaflet CSS -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-  crossorigin=""
->
-<!-- Leaflet.draw CSS -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
-/>
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  >
 
-<style>
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-  }
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
 
-  .page-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-  }
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
 
-  .page-subtitle {
-    font-size: 0.9rem;
-    color: #9ca3af;
-  }
+    .page-subtitle {
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
 
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.85rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    border: 1px solid transparent;
-    text-decoration: none;
-    cursor: pointer;
-    background: #020617;
-    color: #e5e7eb;
-  }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      border: 1px solid transparent;
+      text-decoration: none;
+      cursor: pointer;
+      background: #020617;
+      color: #e5e7eb;
+    }
 
-  .btn-primary {
-    background: #10b981;
-    border-color: #10b981;
-    color: #020617;
-    font-weight: 500;
-  }
+    .btn-primary {
+      background: #10b981;
+      border-color: #10b981;
+      color: #020617;
+      font-weight: 500;
+    }
 
-  .btn-secondary {
-    border-color: #374151;
-  }
+    .btn-secondary {
+      border-color: #374151;
+    }
 
-  .btn-outline {
-    background: transparent;
-    border-color: #4b5563;
-  }
+    .btn-outline {
+      background: transparent;
+      border-color: #4b5563;
+    }
 
-  .btn-danger {
-    background: #b91c1c;
-    border-color: #b91c1c;
-    color: #f9fafb;
-  }
+    .btn-danger {
+      background: #b91c1c;
+      border-color: #b91c1c;
+      color: #f9fafb;
+    }
 
-  .btn:hover {
-    filter: brightness(1.05);
-  }
+    .btn:hover {
+      filter: brightness(1.05);
+    }
 
-  .editor-card {
-    background: #020617;
-    border-radius: 18px;
-    border: 1px solid #111827;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-    padding: 1.2rem 1.4rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-  }
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr);
+      gap: 1.2rem;
+    }
 
-  .route-map {
-    width: 100%;
-    height: 430px;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid #111827;
-  }
+    @media (max-width: 900px) {
+      .layout-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
 
-  .helper-text {
-    font-size: 0.8rem;
-    color: #9ca3af;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
+    .map-card,
+    .info-card {
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid #111827;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      padding: 1rem 1.2rem;
+    }
 
-  .helper-text span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
+    #map {
+      width: 100%;
+      height: 70vh;
+      min-height: 420px;
+      border-radius: 1.1rem;
+      overflow: hidden;
+    }
 
-  .editor-footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-top: 0.5rem;
-  }
-</style>
+    .info-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-card ul {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      padding-left: 1.1rem;
+    }
+
+    .form-footer {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
 <section>
   <div class="page-header">
     <div>
-      <h1 class="page-title">
-        Editar ruta de vuelo – {{ flight.name }} (#{{ flight.id }})
-      </h1>
+      <h1 class="page-title">Editar ruta de vuelo</h1>
       <p class="page-subtitle">
-        Dibuja o ajusta la trayectoria del dron sobre el mapa. La ruta se guardará como GeoJSON.
+        Vuelo: <strong>{{ flight.name }}</strong>
+        {% if flight.date %} · {{ flight.date }}{% endif %}
       </p>
     </div>
     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
       <a href="{% url 'flight_list' %}" class="btn btn-secondary">⬅️ Volver a vuelos</a>
-      <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn btn-outline">🗺️ Ver vuelo en el mapa</a>
+      <a href="{% url 'map' %}?flight={{ flight.id }}" class="btn btn-outline">🗺️ Ver en mapa 2D</a>
     </div>
   </div>
 
-  <div class="editor-card">
-    <div id="map-route" class="route-map"></div>
+  <!-- Formulario clásico: POST con CSRF + campo oculto para el GeoJSON -->
+  <form id="flight-path-form" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="path_geojson" id="id_path_geojson">
 
-    <div class="helper-text">
-      <span>✏️ Usa la herramienta de <strong>polilínea</strong> (icono de línea) para dibujar el recorrido.</span>
-      <span>🧩 Puedes <strong>editar</strong> o <strong>borrar</strong> la ruta con los controles de edición.</span>
-      <span>💾 Cuando estés conforme, pulsa <strong>“Guardar ruta”</strong> para almacenar el GeoJSON.</span>
-    </div>
+    <div class="layout-grid">
+      <div class="map-card">
+        <div id="map"></div>
+      </div>
 
-    <form id="route-form" method="post">
-      {% csrf_token %}
-      <input type="hidden" name="path_geojson" id="id_path_geojson">
+      <aside class="info-card">
+        <h3>Instrucciones</h3>
+        <ul>
+          <li>Dibuja la ruta usando la herramienta de línea de Leaflet Draw.</li>
+          <li>Solo se guardará la <strong>última línea</strong> que dejes creada.</li>
+          <li>Pulsa <strong>“Guardar ruta”</strong> para almacenar la geometría en la base de datos.</li>
+          <li>Si envías el formulario sin ninguna línea, el vuelo quedará <strong>sin ruta</strong>.</li>
+        </ul>
 
-      <div class="editor-footer">
-        <a href="{% url 'flight_list' %}" class="btn btn-outline">
-          Cancelar
-        </a>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <button type="button" id="btn-clear-route" class="btn btn-secondary">
-            🧹 Limpiar ruta
-          </button>
-          <button type="button" id="btn-save-route" class="btn btn-primary">
+        <div class="form-footer">
+          <a href="{% url 'flight_list' %}" class="btn btn-outline">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-primary">
             💾 Guardar ruta
           </button>
         </div>
-      </div>
-    </form>
-  </div>
+      </aside>
+    </div>
+  </form>
 </section>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Leaflet JS -->
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin="">
-</script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+  </script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
-<!-- Leaflet.draw JS -->
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script>
+    // GeoJSON inicial que nos pasa la vista (puede ser null)
+    const initialGeoJSON = {{ initial_geojson|safe }};
 
-<script>
-  (function() {
-    const flightId = {{ flight.id }};
-    const map = L.map('map-route').setView([40.4167, -3.7033], 6); // Centro aproximado España
+    // Mapa base
+    const map = L.map('map').setView([40.4167, -3.7033], 6); // Madrid por defecto
 
-    // Capa base
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    // Capa donde se almacenará la ruta
+    // Capa donde guardaremos la línea dibujada
     const drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
+    // Si ya había una ruta guardada, la pintamos
+    if (initialGeoJSON && initialGeoJSON.type) {
+      let geom = initialGeoJSON;
+
+      // Si viene como Feature, usamos geometry
+      if (geom.type === 'Feature' && geom.geometry) {
+        geom = geom.geometry;
+      }
+
+      try {
+        const layer = L.geoJSON(geom).addTo(drawnItems);
+        const bounds = layer.getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds.pad(0.2));
+        }
+      } catch (e) {
+        console.error('Error al cargar la ruta existente:', e);
+      }
+    }
+
     // Controles de dibujo (solo polilínea)
     const drawControl = new L.Control.Draw({
-      position: 'topleft',
+      edit: {
+        featureGroup: drawnItems,
+        edit: true,
+        remove: true
+      },
       draw: {
-        polygon: false,
-        rectangle: false,
+        marker: false,
         circle: false,
         circlemarker: false,
-        marker: false,
+        polygon: false,
+        rectangle: false,
         polyline: {
           shapeOptions: {
             color: '#22c55e',
             weight: 4
           }
         }
-      },
-      edit: {
-        featureGroup: drawnItems,
-        remove: true
       }
     });
     map.addControl(drawControl);
 
-    // Solo queremos UNA ruta: si dibuja una nueva, eliminamos la anterior
-    map.on(L.Draw.Event.CREATED, function (event) {
-      const layer = event.layer;
+    // Cada vez que se crea una nueva línea, eliminamos las anteriores
+    map.on(L.Draw.Event.CREATED, function (e) {
+      const layer = e.layer;
       drawnItems.clearLayers();
       drawnItems.addLayer(layer);
-      fitToDrawn();
     });
 
-    map.on(L.Draw.Event.EDITED, function () {
-      fitToDrawn();
-    });
+    // Enviar el GeoJSON al backend al mandar el formulario
+    const form = document.getElementById('flight-path-form');
+    const inputGeoJSON = document.getElementById('id_path_geojson');
 
-    map.on(L.Draw.Event.DELETED, function () {
-      fitToDrawn();
-    });
+    form.addEventListener('submit', function (event) {
+      // Cogemos la capa actual
+      const fc = drawnItems.toGeoJSON();
 
-    function fitToDrawn() {
-      const layers = drawnItems.getLayers();
-      if (layers.length === 0) return;
-      try {
-        const bounds = layers[0].getBounds();
-        if (bounds && bounds.isValid()) {
-          map.fitBounds(bounds.pad(0.1));
-        }
-      } catch (e) {
-        // Si no tiene getBounds (raro), ignoramos
-      }
-    }
-
-    // Cargar ruta existente desde la API (si la hay)
-    fetch(`/api/flights/${flightId}/`)
-      .then(r => {
-        if (!r.ok) throw new Error('No se pudo cargar el vuelo');
-        return r.json();
-      })
-      .then(data => {
-        if (data && data.path_geojson) {
-          try {
-            const geojsonLayer = L.geoJSON(data.path_geojson);
-            let lineLayer = null;
-
-            geojsonLayer.eachLayer(function (l) {
-              if (l instanceof L.Polyline) {
-                lineLayer = l;
-              }
-            });
-
-            if (lineLayer) {
-              drawnItems.clearLayers();
-              drawnItems.addLayer(lineLayer);
-              fitToDrawn();
-            }
-          } catch (e) {
-            console.error('Error interpretando path_geojson', e);
-          }
-        }
-      })
-      .catch(err => {
-        console.error('Error cargando datos del vuelo', err);
-      });
-
-    // Botones
-    const btnSave = document.getElementById('btn-save-route');
-    const btnClear = document.getElementById('btn-clear-route');
-    const hiddenInput = document.getElementById('id_path_geojson');
-    const form = document.getElementById('route-form');
-
-    btnClear.addEventListener('click', function() {
-      if (!confirm('Esto eliminará la ruta actual dibujada. ¿Seguro?')) {
+      if (!fc.features.length) {
+        // No hay geometría: dejamos path_geojson vacío => se borra la ruta
+        inputGeoJSON.value = "";
         return;
       }
-      drawnItems.clearLayers();
-      hiddenInput.value = '';
-    });
 
-    btnSave.addEventListener('click', function() {
-      const layers = drawnItems.getLayers();
-
-      if (layers.length === 0) {
-        if (!confirm('No hay ninguna ruta dibujada. Se eliminará la ruta existente (si la había). ¿Quieres continuar?')) {
-          return;
+      // Buscamos la primera LineString
+      let lineGeom = null;
+      for (const feat of fc.features) {
+        if (feat.geometry && feat.geometry.type === 'LineString') {
+          lineGeom = feat.geometry;
+          break;
         }
-        hiddenInput.value = '';
-      } else {
-        const layer = layers[0];
-        const geojson = layer.toGeoJSON();
-        hiddenInput.value = JSON.stringify(geojson);
       }
 
-      form.submit();
+      if (!lineGeom) {
+        alert('No se ha encontrado ninguna línea en el mapa.');
+        event.preventDefault();
+        return;
+      }
+
+      // Guardamos SOLO la geometry LineString como JSON
+      inputGeoJSON.value = JSON.stringify(lineGeom);
     });
-  })();
-</script>
+  </script>
 {% endblock %}

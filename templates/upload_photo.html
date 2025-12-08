@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Subir nueva fotografía – Drones GIS{% endblock %}
+{% block title %}{% trans "Subir nueva fotografía – Drones GIS" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -137,21 +138,6 @@
     flex-wrap: wrap;
   }
 
-  .preview-mini {
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid #111827;
-    background: #020617;
-    max-height: 220px;
-  }
-
-  .preview-mini img {
-    display: block;
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-  }
-
   .preview-meta {
     margin-top: 0.6rem;
     font-size: 0.8rem;
@@ -172,14 +158,14 @@
 <section>
   <div class="page-header">
     <div>
-      <h1 class="page-title">Subir nueva fotografía</h1>
+      <h1 class="page-title">{% trans "Subir nueva fotografía" %}</h1>
       <p class="page-subtitle">
-        Añade una imagen geolocalizada y asígnala a un vuelo para visualizarla en el mapa GIS.
+        {% trans "Añade una imagen geolocalizada y asígnala a un vuelo para visualizarla en el mapa GIS." %}
       </p>
     </div>
     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-      <a href="{% url 'photo_list' %}" class="btn btn-secondary">📷 Volver a la galería</a>
-      <a href="{% url 'map' %}" class="btn btn-outline">🗺️ Ir al mapa</a>
+      <a href="{% url 'photo_list' %}" class="btn btn-secondary">📷 {% trans "Volver a la galería" %}</a>
+      <a href="{% url 'map' %}" class="btn btn-outline">🗺️ {% trans "Ir al mapa" %}</a>
     </div>
   </div>
 
@@ -197,10 +183,10 @@
         <!-- Columna izquierda: campos principales -->
         <div>
           <div class="form-group">
-            <label class="form-label">Imagen</label>
+            <label class="form-label">{% trans "Imagen" %}</label>
             {{ form.image }}
             <p class="form-help">
-              Formatos recomendados: JPG, PNG. Tamaño moderado para no sobrecargar el visor.
+              {% trans "Formatos recomendados: JPG, PNG. Tamaño moderado para no sobrecargar el visor." %}
             </p>
             {% for error in form.image.errors %}
               <p class="field-error">{{ error }}</p>
@@ -208,10 +194,10 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Vuelo asociado (opcional)</label>
+            <label class="form-label">{% trans "Vuelo asociado (opcional)" %}</label>
             {{ form.flight }}
             <p class="form-help">
-              Si asignas un vuelo, la foto aparecerá ligada a su ruta en el mapa.
+              {% trans "Si asignas un vuelo, la foto aparecerá ligada a su ruta en el mapa." %}
             </p>
             {% for error in form.flight.errors %}
               <p class="field-error">{{ error }}</p>
@@ -219,10 +205,10 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Notas / descripción</label>
+            <label class="form-label">{% trans "Notas / descripción" %}</label>
             {{ form.notes }}
             <p class="form-help">
-              Por ejemplo: tipo de misión, condiciones de luz, objetivo de la toma, etc.
+              {% trans "Por ejemplo: tipo de misión, condiciones de luz, objetivo de la toma, etc." %}
             </p>
             {% for error in form.notes.errors %}
               <p class="field-error">{{ error }}</p>
@@ -230,10 +216,10 @@
           </div>
         </div>
 
-        <!-- Columna derecha: coords / fecha / preview simple -->
+        <!-- Columna derecha: coords / fecha -->
         <div>
           <div class="form-group">
-            <label class="form-label">Latitud</label>
+            <label class="form-label">{% trans "Latitud" %}</label>
             {{ form.lat }}
             {% for error in form.lat.errors %}
               <p class="field-error">{{ error }}</p>
@@ -241,7 +227,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Longitud</label>
+            <label class="form-label">{% trans "Longitud" %}</label>
             {{ form.lon }}
             {% for error in form.lon.errors %}
               <p class="field-error">{{ error }}</p>
@@ -249,7 +235,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Fecha / hora de toma (opcional)</label>
+            <label class="form-label">{% trans "Fecha / hora de toma (opcional)" %}</label>
             {{ form.taken_at }}
             {% if form.taken_at.help_text %}
               <p class="form-help">{{ form.taken_at.help_text }}</p>
@@ -259,84 +245,22 @@
             {% endfor %}
           </div>
 
-
           <div class="preview-meta">
-            <span>🧭 Asegúrate de que las coordenadas son correctas para que se sitúe bien en el mapa.</span>
-            <span>💾 Podrás editar estos datos más tarde desde la galería.</span>
+            <span>🧭 {% trans "Asegúrate de que las coordenadas son correctas para que se sitúe bien en el mapa." %}</span>
+            <span>💾 {% trans "Podrás editar estos datos más tarde desde la galería." %}</span>
           </div>
         </div>
       </div>
 
       <div class="form-footer">
         <a href="{% url 'photo_list' %}" class="btn btn-outline">
-          Cancelar
+          {% trans "Cancelar" %}
         </a>
         <button type="submit" class="btn btn-primary">
-          ⬆️ Subir fotografía
+          ⬆️ {% trans "Subir fotografía" %}
         </button>
       </div>
     </form>
   </div>
 </section>
 {% endblock %}
-
-{% block extra_js %}
-  <!-- Librería EXIF.js para leer metadatos EXIF en el navegador -->
-  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const fileInput = document.getElementById('id_image');
-      const latInput  = document.getElementById('id_lat');
-      const lonInput  = document.getElementById('id_lon');
-
-      if (!fileInput || !latInput || !lonInput) {
-        console.warn('No se encontraron los campos de imagen/lat/lon en el DOM.');
-        return;
-      }
-
-      fileInput.addEventListener('change', function () {
-        const file = fileInput.files[0];
-        if (!file) {
-          return;
-        }
-
-        // Usamos EXIF.js para leer los metadatos GPS del fichero
-        EXIF.getData(file, function () {
-          const lat     = EXIF.getTag(this, 'GPSLatitude');
-          const latRef  = EXIF.getTag(this, 'GPSLatitudeRef');
-          const lon     = EXIF.getTag(this, 'GPSLongitude');
-          const lonRef  = EXIF.getTag(this, 'GPSLongitudeRef');
-
-          if (!lat || !lon || !latRef || !lonRef) {
-            console.log('La imagen seleccionada no contiene metadatos GPS.');
-            return;
-          }
-
-          function dmsToDecimal(dms, ref) {
-            // dms es un array de objetos {numerator, denominator}
-            const deg = dms[0].numerator / dms[0].denominator;
-            const min = dms[1].numerator / dms[1].denominator;
-            const sec = dms[2].numerator / dms[2].denominator;
-
-            let dec = deg + (min / 60.0) + (sec / 3600.0);
-            if (ref === 'S' || ref === 'W') {
-              dec = -dec;
-            }
-            return dec;
-          }
-
-          const decLat = dmsToDecimal(lat, latRef);
-          const decLon = dmsToDecimal(lon, lonRef);
-
-          // Escribimos los valores en los inputs del formulario
-          latInput.value = decLat.toFixed(6);
-          lonInput.value = decLon.toFixed(6);
-
-          console.log('Coordenadas EXIF detectadas:', decLat, decLon);
-        });
-      });
-    });
-  </script>
-{% endblock %}
-

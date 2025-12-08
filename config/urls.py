@@ -4,6 +4,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django.views.i18n import set_language
+
 from rest_framework.routers import DefaultRouter
 
 from core.views import (
@@ -54,6 +56,8 @@ urlpatterns = [
     path('flight/<int:flight_id>/export/', export_single_flight_geojson, name='export_single_flight'),
     path('flights/<int:flight_id>/edit_path/', edit_flight_path, name='edit_flight_path'),
     path('api/flights/<int:flight_id>/save_path/', api_save_flight_path, name='api_save_flight_path'),
+    path('set-language/', set_language, name='set_language'),
+
 
 ]
 

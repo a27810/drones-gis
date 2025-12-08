@@ -1,159 +1,310 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Mapa 3D – Drones GIS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Mapa 3D – Drones GIS" %}{% endblock %}
+
+{% block extra_css %}
+  <!-- CesiumJS CSS -->
+  <link
+    href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css"
+    rel="stylesheet"
+  />
 
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      font-family: system-ui, Arial, sans-serif;
-    }
-    header {
-      position: absolute;
-      z-index: 10;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(17,24,39,0.9);
-      color: #e5e7eb;
-      padding: 6px 12px;
+    .map3d-page-wrapper {
       display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .map3d-header {
+      display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.85rem;
+      gap: 0.75rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 999px;
+      padding: 0.6rem 1rem;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      font-size: 0.86rem;
     }
-    header a {
-      color: #a5b4fc;
+
+    .map3d-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .map3d-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .map3d-subtitle {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .map3d-header-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .map3d-header-right a {
       text-decoration: none;
-      margin-left: 10px;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.6);
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
     }
+
+    .map3d-header-right a:hover {
+      background: rgba(30, 64, 175, 0.8);
+      box-shadow: 0 10px 25px rgba(30, 64, 175, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary-cta {
+      background: linear-gradient(135deg, #22c55e, #14b8a6);
+      border-color: transparent !important;
+      color: #020617 !important;
+      font-weight: 600;
+    }
+
+    .btn-primary-cta:hover {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: 0 12px 30px rgba(34, 197, 94, 0.7);
+    }
+
+    .map3d-card {
+      background: radial-gradient(circle at top, #0f172a 0%, #020617 60%, #000 100%);
+      border-radius: 1.5rem;
+      padding: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow:
+        0 20px 60px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.7);
+    }
+
     #cesiumContainer {
-      position: absolute;
-      top: 32px;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      width: 100%;
+      height: 78vh;
+      min-height: 480px;
+      border-radius: 1.25rem;
+      overflow: hidden;
+    }
+
+    .cesium-viewer,
+    .cesium-viewer-cesiumWidgetContainer {
+      border-radius: 1.25rem;
     }
   </style>
+{% endblock %}
 
-  <!-- CesiumJS desde CDN -->
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+{% block content %}
+<div class="map3d-page-wrapper">
+
+  <div class="map3d-header">
+    <div class="map3d-header-left">
+      <div class="map3d-title">
+        {% trans "Visor 3D de vuelos de drones" %}
+      </div>
+      <div class="map3d-subtitle">
+        {% trans "Demo TFG – Visualización de rutas y fotografías en entorno 3D con CesiumJS." %}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="map3d-card">
+    <div id="cesiumContainer"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <!-- CesiumJS -->
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
-</head>
-<body>
-  <header>
-    <div>
-      <strong>Visor 3D de vuelos de drones</strong> – Demo TFG
-    </div>
-    <div>
-      <a href="{% url 'map' %}">Mapa 2D</a>
-      <a href="{% url 'home' %}">Inicio</a>
-    </div>
-  </header>
-
-  <div id="cesiumContainer"></div>
 
   <script>
-
+    // --- Token de Cesium (demo / TFG) ---
     Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1YmFjYzEwMS03ZDU5LTQ3MjktOWJmNy00OWQ1NTE5ZGI3NTUiLCJpZCI6MzYyNTMzLCJpYXQiOjE3NjM3MTY1MDZ9.rawU6MTUCdteKmx7SoDg_mzARrujegNBczkOT7fZCjY";
 
-    // Viewer 3D usando el terreno elipsoidal (sin createWorldTerrain)
-    const viewer = new Cesium.Viewer('cesiumContainer', {
+    const viewer = new Cesium.Viewer("cesiumContainer", {
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
       baseLayerPicker: true,
       geocoder: false,
       timeline: false,
-      animation: false
+      animation: false,
     });
 
     viewer.scene.globe.enableLighting = false;
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
-    // -----------------------------
-    // Cargar vuelos desde la API
-    // -----------------------------
-    fetch('/api/flights/')
-      .then(r => r.json())
-      .then(flights => {
-        const palette = [
-          Cesium.Color.BLUE,
-          Cesium.Color.LIME,
-          Cesium.Color.ORANGE,
-          Cesium.Color.CYAN,
-          Cesium.Color.MAGENTA,
-          Cesium.Color.YELLOW
-        ];
+    // Paleta de colores para vuelos
+    const flightColors = [
+      Cesium.Color.BLUE,
+      Cesium.Color.LIME,
+      Cesium.Color.ORANGE,
+      Cesium.Color.CYAN,
+      Cesium.Color.MAGENTA,
+      Cesium.Color.YELLOW,
+    ];
 
-        flights.forEach((f, idx) => {
-          if (!f.path_geojson) return;
+    // Normaliza el GeoJSON de la ruta de vuelo a una LineString
+    function getLineString(pathGeojson) {
+      if (!pathGeojson) return null;
 
-          const gj = f.path_geojson;
-          let line = null;
+      let gj = pathGeojson;
 
-          if (gj.type === 'LineString') {
-            line = gj;
-          } else if (
-            gj.type === 'Feature' &&
-            gj.geometry &&
-            gj.geometry.type === 'LineString'
+      // Si viene como cadena, intentar parsear
+      if (typeof gj === "string") {
+        try {
+          gj = JSON.parse(gj);
+        } catch (e) {
+          console.warn("GeoJSON de vuelo no es JSON válido", e);
+          return null;
+        }
+      }
+
+      if (!gj || typeof gj !== "object") return null;
+
+      // Aceptar LineString directa
+      if (gj.type === "LineString" && Array.isArray(gj.coordinates)) {
+        return gj;
+      }
+
+      // Aceptar Feature con geometry LineString
+      if (
+        gj.type === "Feature" &&
+        gj.geometry &&
+        gj.geometry.type === "LineString" &&
+        Array.isArray(gj.geometry.coordinates)
+      ) {
+        return gj.geometry;
+      }
+
+      // Aceptar FeatureCollection y buscar la primera LineString
+      if (gj.type === "FeatureCollection" && Array.isArray(gj.features)) {
+        for (const feat of gj.features) {
+          if (
+            feat &&
+            feat.geometry &&
+            feat.geometry.type === "LineString" &&
+            Array.isArray(feat.geometry.coordinates)
           ) {
-            line = gj.geometry;
+            return feat.geometry;
           }
+        }
+      }
 
+      return null;
+    }
+
+    // -----------------------------
+    // Cargar vuelos y fotos de la API
+    // -----------------------------
+    Promise.all([
+      fetch("/api/flights/").then((r) => r.json()),
+      fetch("/api/photos/").then((r) => r.json()),
+    ])
+      .then(([flights, photos]) => {
+        // --- Vuelos: dibujar rutas 3D ---
+        flights.forEach((f, idx) => {
+          const line = getLineString(f.path_geojson);
           if (!line || !Array.isArray(line.coordinates) || !line.coordinates.length) {
             return;
           }
 
-          const positions = line.coordinates.map(coord => {
+          const positions = line.coordinates.map((coord) => {
             const lon = coord[0];
             const lat = coord[1];
-            const alt = 200 + idx * 30;
+            // Altura artificial para visualizar la ruta sobre el terreno
+            const alt = 200 + idx * 40;
             return Cesium.Cartesian3.fromDegrees(lon, lat, alt);
           });
 
-          const color = palette[idx % palette.length];
+          const color = flightColors[idx % flightColors.length];
 
-          // Línea del vuelo
+          // Línea de vuelo
           viewer.entities.add({
             name: f.name,
             polyline: {
               positions: positions,
               width: 3,
-              material: color
-            }
+              material: color,
+            },
           });
 
-          // Punto "dron" al inicio
+          // Punto inicial tipo "dron"
           viewer.entities.add({
-            name: 'Drone – ' + f.name,
+            name: "Drone – " + f.name,
             position: positions[0],
             point: {
               pixelSize: 10,
               color: color,
               outlineColor: Cesium.Color.BLACK,
-              outlineWidth: 1
+              outlineWidth: 1,
             },
             description: `
               <h3>${f.name}</h3>
-              <p><b>Modelo:</b> ${f.drone_model || '—'}</p>
-              <p><b>Fecha:</b> ${f.date || '—'}</p>
-            `
+              <p><b>Modelo:</b> ${f.drone_model || "—"}</p>
+              <p><b>Fecha:</b> ${f.date || "—"}</p>
+            `,
           });
         });
 
+        // --- Fotos: puntos / billboards 3D ---
+        photos.forEach((p) => {
+          const lat = parseFloat(p.lat);
+          const lon = parseFloat(p.lon);
+          if (isNaN(lat) || isNaN(lon)) return;
+
+          const pos = Cesium.Cartesian3.fromDegrees(lon, lat, 80);
+
+          // URL de la imagen (el serializer manda algo tipo "/media/…")
+          const imgUrl = p.image || null;
+          const imgHtml = imgUrl
+            ? `<img src="${imgUrl}" style="max-width:260px;max-height:180px;display:block;margin:6px 0;border-radius:8px;">`
+            : "";
+
+          viewer.entities.add({
+            name: "Foto #" + p.id,
+            position: pos,
+            point: {
+              pixelSize: 8,
+              color: Cesium.Color.fromCssColorString("#38bdf8"),
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 1,
+            },
+            description: `
+              <h3>Foto #${p.id}</h3>
+              ${imgHtml}
+              <p><b>Notas:</b> ${p.notes || "—"}</p>
+              <p><b>Vuelo:</b> ${p.flight || ""}</p>
+              <p><b>Coordenadas:</b> ${lat.toFixed(6)}, ${lon.toFixed(6)}</p>
+            `,
+          });
+        });
+
+        // Centrar cámara en las entidades si hay alguna
         if (viewer.entities.values.length > 0) {
           viewer.zoomTo(viewer.entities);
         }
       })
-      .catch(err => {
-        console.error('Error cargando vuelos para Cesium', err);
+      .catch((err) => {
+        console.error("Error cargando datos para el visor 3D", err);
       });
   </script>
-</body>
-</html>
+{% endblock %}

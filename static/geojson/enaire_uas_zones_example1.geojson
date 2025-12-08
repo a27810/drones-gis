@@ -1,0 +1,246 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Madrid-Barajas Adolfo Suárez CTR",
+        "class": "Zona de control CTR",
+        "type": "Aeropuerto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-3.62, 40.42],
+            [-3.52, 40.42],
+            [-3.52, 40.52],
+            [-3.62, 40.52],
+            [-3.62, 40.42]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Base Aérea de Torrejón",
+        "class": "Zona militar restringida",
+        "type": "Base militar"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-3.52, 40.45],
+            [-3.44, 40.45],
+            [-3.44, 40.52],
+            [-3.52, 40.52],
+            [-3.52, 40.45]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Base Aérea de Getafe",
+        "class": "Zona militar restringida",
+        "type": "Base militar"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-3.78, 40.27],
+            [-3.68, 40.27],
+            [-3.68, 40.35],
+            [-3.78, 40.35],
+            [-3.78, 40.27]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Aeródromo de Cuatro Vientos",
+        "class": "Zona de aeródromo",
+        "type": "Aeródromo"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-3.79, 40.35],
+            [-3.73, 40.35],
+            [-3.73, 40.40],
+            [-3.79, 40.40],
+            [-3.79, 40.35]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Zona gubernamental Madrid Centro",
+        "class": "Zona prohibida",
+        "type": "Zona urbana sensible"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-3.72, 40.41],
+            [-3.68, 40.41],
+            [-3.68, 40.43],
+            [-3.72, 40.43],
+            [-3.72, 40.41]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Área Hospitalaria Defensa (Gómez Ulla)",
+        "class": "Zona restringida",
+        "type": "Instalación sanitaria crítica"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-3.77, 40.38],
+            [-3.73, 40.38],
+            [-3.73, 40.40],
+            [-3.77, 40.40],
+            [-3.77, 40.38]
+          ]
+        ]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Aeropuerto de Zaragoza",
+        "class": "Zona de control CTR",
+        "type": "Aeropuerto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-1.08, 41.63],
+            [-0.99, 41.63],
+            [-0.99, 41.71],
+            [-1.08, 41.71],
+            [-1.08, 41.63]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Base Aérea de Zaragoza",
+        "class": "Zona militar restringida",
+        "type": "Base militar"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-1.05, 41.65],
+            [-0.97, 41.65],
+            [-0.97, 41.72],
+            [-1.05, 41.72],
+            [-1.05, 41.65]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Campo de Maniobras de San Gregorio",
+        "class": "Zona militar prohibida",
+        "type": "Campo de maniobras"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-1.05, 41.76],
+            [-0.90, 41.76],
+            [-0.90, 41.88],
+            [-1.05, 41.88],
+            [-1.05, 41.76]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Entorno Basílica del Pilar",
+        "class": "Zona restringida urbana",
+        "type": "Zona histórica"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-0.884, 41.654],
+            [-0.876, 41.654],
+            [-0.876, 41.661],
+            [-0.884, 41.661],
+            [-0.884, 41.654]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Zona urbana sensible Zaragoza Centro",
+        "class": "Zona restringida",
+        "type": "Zona urbana sensible"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-0.90, 41.64],
+            [-0.87, 41.64],
+            [-0.87, 41.66],
+            [-0.90, 41.66],
+            [-0.90, 41.64]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Polígono Logístico Militar Zaragoza Sur",
+        "class": "Zona militar restringida",
+        "type": "Instalación logística"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-0.94, 41.60],
+            [-0.88, 41.60],
+            [-0.88, 41.64],
+            [-0.94, 41.64],
+            [-0.94, 41.60]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 {% load static %}
+{% load i18n %}
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -162,6 +164,37 @@
     a:hover {
       color: #bfdbfe;
     }
+
+    .language-switcher {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+    .lang-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        background: #1e293b;
+        color: #e5e7eb;
+        border: 1px solid #334155;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: 0.2s;
+    }
+
+    .lang-btn:hover {
+        background: #334155;
+    }
+
+    .flag-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        object-fit: cover;
+    }
   </style>
 
   {# Bloque para CSS adicional de cada vista #}
@@ -186,6 +219,22 @@
           <a href="{% url 'flight_list' %}" class="nav-link">Vuelos</a>
           <a href="{% url 'upload_photo' %}" class="nav-link nav-link-primary">+ Subir foto</a>
         </nav>
+
+        <form action="{% url 'set_language' %}" method="post" style="display:flex; gap:4px; align-items:center; margin-left:10px;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          
+          <button type="submit" name="language" value="es" class="lang-btn">
+              <img src="{% static 'img/flags/es.png' %}" alt="ES" class="flag-icon">
+              ES
+          </button>
+
+          <button type="submit" name="language" value="en" class="lang-btn">
+              <img src="{% static 'img/flags/en.png' %}" alt="EN" class="flag-icon">
+              EN
+          </button>
+        </form>
+
       </header>
 
       <main class="app-main">

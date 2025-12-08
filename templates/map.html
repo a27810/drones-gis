@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Mapa GIS – Drones GIS{% endblock %}
+{% block title %}{% trans "Mapa GIS – Drones GIS" %}{% endblock %}
 
 {% block extra_css %}
   <!-- Leaflet CSS -->
@@ -155,11 +155,10 @@
     </div>
 
     <div class="map-toolbar-right">
-      <a href="{% url 'home' %}">Inicio</a>
-      <a href="{% url 'photo_list' %}">Galería</a>
-      <a href="{% url 'map3d_view' %}">Mapa 3D</a>
-      <a href="#" id="btn-export-geojson">Exportar GeoJSON</a>
-      <a href="{% url 'upload_photo' %}" class="btn-primary-cta">+ Subir foto</a>
+      <span class="map-toolbar-label">{% trans "Vuelo:" %}</span>
+
+      <a href="#" id="btn-export-geojson">{% trans "Exportar GeoJSON" %}</a>
+
     </div>
   </div>
 
@@ -483,8 +482,14 @@
       ];
 
       let focusedFlightLatLngs = null;
+      const showingSingleFlight = (focusFlightId !== null);
 
       flights.forEach((f, idx) => {
+        // Si hay un vuelo seleccionado, solo pintamos ese
+        if (showingSingleFlight && f.id !== focusFlightId) {
+          return;
+        }
+
         if (!f.path_geojson) return;
         const latlngs = lineStringToLatLngs(f.path_geojson);
         if (!latlngs.length) return;
@@ -511,6 +516,7 @@
           focusedFlightLatLngs = latlngs;
         }
       });
+
 
       // 6) Ajustar vista inicial + animación
       if (focusMarker) {

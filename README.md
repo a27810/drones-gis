@@ -77,6 +77,9 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+## 🛠️ Actualizar e insertar Zonas ENAIRE
+python manage.py import_uas_zones
+
 Accede en:
 
 ```

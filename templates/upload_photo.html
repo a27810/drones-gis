@@ -279,3 +279,64 @@
   </div>
 </section>
 {% endblock %}
+
+{% block extra_js %}
+  <!-- Librería EXIF.js para leer metadatos EXIF en el navegador -->
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const fileInput = document.getElementById('id_image');
+      const latInput  = document.getElementById('id_lat');
+      const lonInput  = document.getElementById('id_lon');
+
+      if (!fileInput || !latInput || !lonInput) {
+        console.warn('No se encontraron los campos de imagen/lat/lon en el DOM.');
+        return;
+      }
+
+      fileInput.addEventListener('change', function () {
+        const file = fileInput.files[0];
+        if (!file) {
+          return;
+        }
+
+        // Usamos EXIF.js para leer los metadatos GPS del fichero
+        EXIF.getData(file, function () {
+          const lat     = EXIF.getTag(this, 'GPSLatitude');
+          const latRef  = EXIF.getTag(this, 'GPSLatitudeRef');
+          const lon     = EXIF.getTag(this, 'GPSLongitude');
+          const lonRef  = EXIF.getTag(this, 'GPSLongitudeRef');
+
+          if (!lat || !lon || !latRef || !lonRef) {
+            console.log('La imagen seleccionada no contiene metadatos GPS.');
+            return;
+          }
+
+          function dmsToDecimal(dms, ref) {
+            // dms es un array de objetos {numerator, denominator}
+            const deg = dms[0].numerator / dms[0].denominator;
+            const min = dms[1].numerator / dms[1].denominator;
+            const sec = dms[2].numerator / dms[2].denominator;
+
+            let dec = deg + (min / 60.0) + (sec / 3600.0);
+            if (ref === 'S' || ref === 'W') {
+              dec = -dec;
+            }
+            return dec;
+          }
+
+          const decLat = dmsToDecimal(lat, latRef);
+          const decLon = dmsToDecimal(lon, lonRef);
+
+          // Escribimos los valores en los inputs del formulario
+          latInput.value = decLat.toFixed(6);
+          lonInput.value = decLon.toFixed(6);
+
+          console.log('Coordenadas EXIF detectadas:', decLat, decLon);
+        });
+      });
+    });
+  </script>
+{% endblock %}
+

@@ -53,6 +53,7 @@ class PhotoUploadForm(forms.ModelForm):
         # Si el usuario NO introduce coordenadas → usar EXIF automáticamente
         if image and (lat is None or lon is None):
             gps = extract_gps_from_image(image)
+            print("DEBUG EXIF → gps devuelto:", gps)
 
             if gps:
                 cleaned_data["lat"] = gps.get("lat")

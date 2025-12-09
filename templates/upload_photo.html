@@ -264,3 +264,47 @@
   </div>
 </section>
 {% endblock %}
+
+{% block extra_js %}
+  <!-- Librería exifr para leer EXIF en el navegador -->
+  <script src="https://cdn.jsdelivr.net/npm/exifr/dist/lite.umd.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const fileInput = document.getElementById('id_image');
+      const latInput  = document.getElementById('id_lat');
+      const lonInput  = document.getElementById('id_lon');
+
+      if (!fileInput || !latInput || !lonInput) {
+        console.warn('No se han encontrado los campos de imagen/lat/lon en el DOM.');
+        return;
+      }
+
+      fileInput.addEventListener('change', async function () {
+        const file = fileInput.files[0];
+        if (!file) {
+          return;
+        }
+
+        // Limpiamos primero, por si venían datos antiguos
+        latInput.value = '';
+        lonInput.value = '';
+
+        try {
+          const gps = await exifr.gps(file);
+          console.log('GPS leído desde EXIF:', gps);
+
+          if (gps && typeof gps.latitude === 'number' && typeof gps.longitude === 'number') {
+            // exifr ya devuelve en decimales
+            latInput.value = gps.latitude.toFixed(6);
+            lonInput.value = gps.longitude.toFixed(6);
+          } else {
+            console.info('La imagen no contiene datos GPS EXIF o no se han podido leer.');
+          }
+        } catch (err) {
+          console.error('Error leyendo EXIF en el navegador:', err);
+        }
+      });
+    });
+  </script>
+{% endblock %}

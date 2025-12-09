@@ -33,11 +33,29 @@ INSTALLED_APPS = [
     # Terceros
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 
     # App del proyecto
     'core',
 ]
 
+# -----------------------
+# DRF + Spectacular
+# -----------------------
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Drones GIS API',
+    'DESCRIPTION': (
+        'API para gestión de vuelos, fotografías geolocalizadas '
+        'y zonas UAS del proyecto TFG Drones GIS.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # lo más arriba posible

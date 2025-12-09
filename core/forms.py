@@ -27,13 +27,29 @@ def dms_to_decimal(dms, ref):
 
 
 class PhotoUploadForm(forms.ModelForm):
-    class Meta:
-        model = Photo
-        fields = ['flight', 'image', 'lat', 'lon', 'taken_at', 'notes']
-
     # Permitir coordenadas negativas manualmente
     lat = forms.FloatField(required=False)
     lon = forms.FloatField(required=False)
+
+    # Nuevo: campo fecha/hora con widget HTML5 y help_text
+    taken_at = forms.DateTimeField(
+        required=False,
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "step": 60,  # minutos, para no pedir segundos
+                "placeholder": "2025-12-08T19:30",
+            }
+        ),
+        help_text=(
+            "Formato: AAAA-MM-DDThh:mm (por ejemplo, 2025-12-08T19:30). "
+            "También puedes usar el selector de fecha y hora del navegador."
+        ),
+    )
+
+    class Meta:
+        model = Photo
+        fields = ['flight', 'image', 'lat', 'lon', 'taken_at', 'notes']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -53,7 +69,6 @@ class PhotoUploadForm(forms.ModelForm):
         # Si el usuario NO introduce coordenadas → usar EXIF automáticamente
         if image and (lat is None or lon is None):
             gps = extract_gps_from_image(image)
-            print("DEBUG EXIF → gps devuelto:", gps)
 
             if gps:
                 cleaned_data["lat"] = gps.get("lat")
@@ -73,6 +88,7 @@ class PhotoUploadForm(forms.ModelForm):
             raise ValidationError("Longitud fuera de rango (-180 a 180).")
 
         return cleaned_data
+
 
 
 class FlightForm(forms.ModelForm):

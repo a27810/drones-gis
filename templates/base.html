@@ -69,6 +69,7 @@
       gap: 12px;
       padding-bottom: 8px;
       border-bottom: 1px solid rgba(30, 64, 175, 0.6);
+      flex-wrap: wrap;
     }
 
     .brand {
@@ -77,18 +78,13 @@
       gap: 10px;
     }
 
-    .brand-logo {
-      width: 28px;
-      height: 28px;
+    /* Nuevo logo pequeño en el header */
+    .brand-logo-img {
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #4ade80, #22c55e 45%, #16a34a 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-      color: #022c22;
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.7);
+      object-fit: cover;
+      box-shadow: 0 0 0 2px #22c55e33;
     }
 
     .brand-text-title {
@@ -166,34 +162,34 @@
     }
 
     .language-switcher {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
 
     .lang-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 10px;
-        border-radius: 8px;
-        background: #1e293b;
-        color: #e5e7eb;
-        border: 1px solid #334155;
-        cursor: pointer;
-        font-size: 0.8rem;
-        transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: #1e293b;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: 0.2s;
     }
 
     .lang-btn:hover {
-        background: #334155;
+      background: #334155;
     }
 
     .flag-icon {
-        width: 16px;
-        height: 16px;
-        border-radius: 3px;
-        object-fit: cover;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      object-fit: cover;
     }
   </style>
 
@@ -205,12 +201,19 @@
     <div class="app-card">
       <header class="app-header">
         <div class="brand">
-          <div class="brand-logo">DG</div>
-          <div>
-            <div class="brand-text-title">Drones&nbsp;GIS</div>
-            <div class="brand-text-subtitle">Visor de vuelos, fotos y zonas UAS</div>
-          </div>
+          <a href="{% url 'home' %}" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit;">
+            <img
+              src="{% static 'img/logo_peque.png' %}"
+              alt="Logo Drones GIS"
+              class="brand-logo-img"
+            >
+            <div>
+              <div class="brand-text-title">Drones&nbsp;GIS</div>
+              <div class="brand-text-subtitle">Visor de vuelos, fotos y zonas UAS</div>
+            </div>
+          </a>
         </div>
+
         <nav class="app-nav">
           <a href="{% url 'home' %}" class="nav-link">Inicio</a>
           <a href="{% url 'map' %}" class="nav-link">Mapa 2D</a>
@@ -218,23 +221,22 @@
           <a href="{% url 'photo_list' %}" class="nav-link">Galería</a>
           <a href="{% url 'flight_list' %}" class="nav-link">Vuelos</a>
           <a href="{% url 'upload_photo' %}" class="nav-link nav-link-primary">+ Subir foto</a>
-        </nav>
 
-        <form action="{% url 'set_language' %}" method="post" style="display:flex; gap:4px; align-items:center; margin-left:10px;">
-          {% csrf_token %}
-          <input type="hidden" name="next" value="{{ request.get_full_path }}">
-          
-          <button type="submit" name="language" value="es" class="lang-btn">
+          <form action="{% url 'set_language' %}" method="post" style="display:flex; gap:4px; align-items:center; margin-left:10px;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            <button type="submit" name="language" value="es" class="lang-btn">
               <img src="{% static 'img/flags/es.png' %}" alt="ES" class="flag-icon">
               ES
-          </button>
+            </button>
 
-          <button type="submit" name="language" value="en" class="lang-btn">
+            <button type="submit" name="language" value="en" class="lang-btn">
               <img src="{% static 'img/flags/en.png' %}" alt="EN" class="flag-icon">
               EN
-          </button>
-        </form>
-
+            </button>
+          </form>
+        </nav>
       </header>
 
       <main class="app-main">

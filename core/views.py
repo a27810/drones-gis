@@ -10,6 +10,7 @@ from .models import Flight, Photo, Zone
 from .serializers import FlightSerializer, PhotoSerializer, ZoneSerializer
 from .forms import PhotoUploadForm, FlightForm
 from django.db.models import Q, Count
+from django.urls import reverse
 
 
 # -----------------------
@@ -47,16 +48,21 @@ def map_view(request):
 
 @require_http_methods(["GET", "POST"])
 def upload_photo(request):
-    """
-    Formulario de subida de fotos.
-    Usa PhotoUploadForm, que ya se encarga de EXIF / validación.
-    """
-    if request.method == "POST":
+    if request.method == 'POST':
         form = PhotoUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            # después de subir, volvemos al inicio o al mapa
-            return redirect('home')
+            photo = form.save()
+
+            # Si la foto tiene vuelo asociado, lo usamos también para filtrar en el mapa
+            flight_id = photo.flight_id
+
+            # Construimos la URL del mapa con parámetros ?photo=ID[&flight=ID]
+            url = reverse('map')
+            params = f'?photo={photo.id}'
+            if flight_id:
+                params += f'&flight={flight_id}'
+
+            return redirect(url + params)
     else:
         form = PhotoUploadForm()
 

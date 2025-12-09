@@ -124,7 +124,23 @@ El sistema permite sustituirlas por capas oficiales (ej. ENAIRE).
 
 ---
 
-## 👤 Autor
+🧪 Swagger y pruebas de API
+
+La API puede probarse directamente desde el navegador:
+
+   ✔ GET vuelos, fotos y zonas
+
+   ✔ POST nuevos registros
+
+   ✔ PUT/PATCH edición
+
+   ✔ DELETE con confirmación
+
+   ✔ Validación OpenAPI automática
+
+   Ideal para tests, debugging o integración con aplicaciones externas.
+
+## 👤 Alumno:
 **Gustavo Díaz**  
 Proyecto TFG – 2025  
 Centro San Valero (DAW)  
